@@ -7,7 +7,6 @@ import {
   profile,
   projects,
   strengths,
-  timeline,
 } from "./data.js";
 
 const projectPositions = [
@@ -91,7 +90,6 @@ export default function App() {
 
   const activePortal = portals.find((portal) => portal.id === activePortalId) ?? portals[0];
   const discoveryCount = discovered.size;
-  const latestActivity = timeline.slice(0, 3);
 
   function activatePortal(id) {
     setActivePortalId(id);
@@ -140,8 +138,8 @@ export default function App() {
 
       <section className="start-card" aria-label="Playable instructions">
         <span>{profile.role}</span>
-        <h1>Move. Enter portals. Discover Aayan.</h1>
-        <p>WASD / arrows, click the floor, or use touch controls.</p>
+        <h1>Playable Portfolio</h1>
+        <p>Move with WASD/arrows, click the map, or beam from the dock.</p>
       </section>
 
       <aside className="portal-card" aria-live="polite">
@@ -170,7 +168,7 @@ export default function App() {
 
         {activePortal.id === "skills" && (
           <div className="loadout-grid">
-            {capabilities.slice(0, 8).map((capability) => (
+            {capabilities.slice(0, 4).map((capability) => (
               <span key={capability.label}>{capability.label}</span>
             ))}
           </div>
@@ -212,15 +210,6 @@ export default function App() {
           </button>
         ))}
       </nav>
-
-      <section className="activity-card" aria-label="Recent activity">
-        <span>Recent Builds</span>
-        {latestActivity.map((item) => (
-          <p key={`${item.repo}-${item.title}`}>
-            {item.repo}: {item.title}
-          </p>
-        ))}
-      </section>
 
       <div className="touch-pad" aria-label="Movement controls">
         <button

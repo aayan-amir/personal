@@ -18,14 +18,14 @@ function makeLabel(text, color) {
   canvas.height = 160;
   const context = canvas.getContext("2d");
   context.clearRect(0, 0, canvas.width, canvas.height);
-  context.fillStyle = "rgba(10, 4, 22, 0.78)";
+  context.fillStyle = "rgba(12, 8, 32, 0.88)";
   context.strokeStyle = "#ffffff";
   context.lineWidth = 8;
   context.roundRect(10, 22, 492, 96, 22);
   context.fill();
   context.stroke();
   context.fillStyle = color;
-  context.font = "900 42px Arial";
+  context.font = "900 38px Arial";
   context.textAlign = "center";
   context.textBaseline = "middle";
   context.fillText(text, 256, 70, 440);
@@ -39,7 +39,7 @@ function makeLabel(text, color) {
       depthTest: false,
     }),
   );
-  sprite.scale.set(2.65, 0.82, 1);
+  sprite.scale.set(2.25, 0.7, 1);
   return sprite;
 }
 
@@ -89,7 +89,7 @@ function makePortal(portal) {
   beam.userData.portalId = portal.id;
 
   const label = makeLabel(portal.title, portal.color);
-  label.position.y = 2.85;
+  label.position.y = 2.28;
   label.userData.portalId = portal.id;
 
   group.add(base, ring, beam, label);
@@ -128,7 +128,7 @@ export default function Scene({
   useEffect(() => {
     const mount = mountRef.current;
     const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x150724, 0.04);
+    scene.fog = new THREE.FogExp2(0x101633, 0.045);
 
     const camera = new THREE.PerspectiveCamera(
       48,
@@ -158,8 +158,8 @@ export default function Scene({
     const floor = new THREE.Mesh(
       new THREE.CircleGeometry(8, 96),
       new THREE.MeshStandardMaterial({
-        color: 0x2b1155,
-        emissive: 0x250047,
+        color: 0x17264d,
+        emissive: 0x101f44,
         emissiveIntensity: 0.26,
         roughness: 0.48,
         metalness: 0.08,
@@ -169,7 +169,7 @@ export default function Scene({
     floor.name = "floor";
     world.add(floor);
 
-    const grid = new THREE.GridHelper(15.5, 18, 0x00e5ff, 0x5a287c);
+    const grid = new THREE.GridHelper(15.5, 18, 0x19d7ff, 0x334477);
     grid.position.y = 0.012;
     grid.material.transparent = true;
     grid.material.opacity = 0.34;
@@ -178,7 +178,7 @@ export default function Scene({
     const rim = new THREE.Mesh(
       new THREE.TorusGeometry(8, 0.035, 12, 180),
       new THREE.MeshBasicMaterial({
-        color: 0xff4fd8,
+        color: 0x19d7ff,
         transparent: true,
         opacity: 0.85,
       }),
@@ -236,7 +236,7 @@ export default function Scene({
     const particleCount = 720;
     const positions = new Float32Array(particleCount * 3);
     const colors = new Float32Array(particleCount * 3);
-    const palette = ["#00e5ff", "#ff4fd8", "#fff36d", "#00ffa8", "#8f7cff"].map(
+    const palette = ["#19d7ff", "#7c5cff", "#f8d84a", "#14f195"].map(
       (item) => new THREE.Color(item),
     );
 
@@ -267,10 +267,10 @@ export default function Scene({
     scene.add(particles);
 
     scene.add(new THREE.AmbientLight(0xffffff, 1.15));
-    const keyLight = new THREE.PointLight(0xfff36d, 58, 44);
+    const keyLight = new THREE.PointLight(0xf8d84a, 48, 44);
     keyLight.position.set(2, 7, 4);
     scene.add(keyLight);
-    const fillLight = new THREE.PointLight(0x00e5ff, 42, 38);
+    const fillLight = new THREE.PointLight(0x19d7ff, 40, 38);
     fillLight.position.set(-4, 3, 6);
     scene.add(fillLight);
 
@@ -407,6 +407,11 @@ export default function Scene({
 
       portalGroups.forEach((portalGroup) => {
         const isActive = portalGroup.userData.portalId === latestRef.current.activePortalId;
+        const portalDistance = Math.hypot(
+          player.position.x - portalGroup.position.x,
+          player.position.z - portalGroup.position.z,
+        );
+        const showLabel = isActive || portalDistance < 1.9;
         const targetScale = isActive ? 1.2 : 1;
         portalGroup.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.08);
         portalGroup.userData.ring.rotation.z += delta * (isActive ? 2.2 : 1.05);
@@ -414,6 +419,7 @@ export default function Scene({
           (isActive ? 0.34 : 0.14) + Math.sin(elapsed * 3) * 0.035;
         portalGroup.children.forEach((child) => {
           if (child.isSprite) {
+            child.visible = showLabel;
             child.quaternion.copy(camera.quaternion);
           }
         });
