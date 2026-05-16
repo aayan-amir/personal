@@ -1,84 +1,47 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 
-function makeRing(color) {
-  const ring = new THREE.Mesh(
-    new THREE.TorusGeometry(1.18, 0.012, 10, 96),
-    new THREE.MeshBasicMaterial({
-      color,
-      transparent: true,
-      opacity: 0.48,
-    }),
-  );
-  ring.rotation.x = Math.PI / 2.4;
-  return ring;
+function makeMaterial(color, emissive = color, intensity = 0.45) {
+  return new THREE.MeshStandardMaterial({
+    color,
+    roughness: 0.28,
+    metalness: 0.2,
+    emissive,
+    emissiveIntensity: intensity,
+  });
 }
 
-function makeNode(project) {
-  const group = new THREE.Group();
-  group.position.set(...project.position);
-  group.userData.projectId = project.id;
-
-  const color = new THREE.Color(project.color);
-  const core = new THREE.Mesh(
-    new THREE.IcosahedronGeometry(0.36, 2),
-    new THREE.MeshStandardMaterial({
-      color,
-      roughness: 0.22,
-      metalness: 0.45,
-      emissive: color,
-      emissiveIntensity: 0.34,
-    }),
-  );
-  core.userData.projectId = project.id;
-
-  const halo = new THREE.Mesh(
-    new THREE.SphereGeometry(0.72, 32, 32),
-    new THREE.MeshBasicMaterial({
-      color,
-      transparent: true,
-      opacity: 0.09,
-    }),
-  );
-
-  const ringA = makeRing(color);
-  const ringB = makeRing(color);
-  ringB.rotation.y = Math.PI / 2;
-
-  group.add(halo, core, ringA, ringB);
-  group.userData.core = core;
-  group.userData.halo = halo;
-  group.userData.rings = [ringA, ringB];
-  return group;
+function disposeObject(object) {
+  object.traverse((child) => {
+    child.geometry?.dispose();
+    if (Array.isArray(child.material)) {
+      child.material.forEach((material) => material.dispose());
+    } else {
+      child.material?.dispose();
+    }
+  });
 }
 
-export default function Scene({
-  activeId,
-  boostOn,
-  scannerOn,
-  onSelect,
-  onSelectIndex,
-  projects,
-}) {
+export default function Scene({ activeProject, powerOn, projects }) {
   const mountRef = useRef(null);
-  const latestRef = useRef({ activeId, boostOn, scannerOn, onSelect, onSelectIndex });
+  const latestRef = useRef({ activeProject, powerOn });
 
   useEffect(() => {
-    latestRef.current = { activeId, boostOn, scannerOn, onSelect, onSelectIndex };
-  }, [activeId, boostOn, scannerOn, onSelect, onSelectIndex]);
+    latestRef.current = { activeProject, powerOn };
+  }, [activeProject, powerOn]);
 
   useEffect(() => {
     const mount = mountRef.current;
     const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x06070d, 0.045);
+    scene.fog = new THREE.FogExp2(0x12091f, 0.038);
 
     const camera = new THREE.PerspectiveCamera(
-      56,
+      52,
       window.innerWidth / window.innerHeight,
       0.1,
       120,
     );
-    camera.position.set(0, 0.45, 10.8);
+    camera.position.set(0, 3.1, 10.8);
 
     const renderer = new THREE.WebGLRenderer({
       alpha: true,
@@ -90,105 +53,141 @@ export default function Scene({
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     mount.appendChild(renderer.domElement);
 
-    const root = new THREE.Group();
-    const nodeLayer = new THREE.Group();
-    const lineLayer = new THREE.Group();
-    scene.add(root, nodeLayer, lineLayer);
+    const pointer = new THREE.Vector2();
+    const world = new THREE.Group();
+    const skyline = new THREE.Group();
+    const orbit = new THREE.Group();
+    scene.add(world);
+    world.add(skyline, orbit);
 
-    const pointer = new THREE.Vector2(0, 0);
-    const raycaster = new THREE.Raycaster();
-    const clickable = [];
-    const projectNodes = new Map();
+    const platform = new THREE.Mesh(
+      new THREE.CylinderGeometry(4.8, 5.4, 0.48, 8),
+      makeMaterial(0x2b1659, 0x5d28ff, 0.35),
+    );
+    platform.position.y = -1.9;
+    platform.rotation.y = Math.PI / 8;
+    world.add(platform);
 
-    const starGeometry = new THREE.BufferGeometry();
-    const starCount = 1450;
-    const positions = new Float32Array(starCount * 3);
-    const colors = new Float32Array(starCount * 3);
-    const palette = [new THREE.Color("#f6f0e8"), new THREE.Color("#7be0c3"), new THREE.Color("#ffcf66")];
+    const platformEdge = new THREE.Mesh(
+      new THREE.TorusGeometry(5.1, 0.035, 10, 160),
+      new THREE.MeshBasicMaterial({
+        color: 0x00e5ff,
+        transparent: true,
+        opacity: 0.9,
+      }),
+    );
+    platformEdge.position.y = -1.62;
+    platformEdge.rotation.x = Math.PI / 2;
+    world.add(platformEdge);
 
-    for (let index = 0; index < starCount; index += 1) {
-      positions[index * 3] = (Math.random() - 0.5) * 44;
-      positions[index * 3 + 1] = (Math.random() - 0.5) * 26;
-      positions[index * 3 + 2] = (Math.random() - 0.5) * 34;
-      const color = palette[Math.floor(Math.random() * palette.length)];
+    const cabinet = new THREE.Group();
+    const cabinetBody = new THREE.Mesh(
+      new THREE.BoxGeometry(1.9, 2.5, 0.72),
+      makeMaterial(0xff4fd8, 0xff4fd8, 0.32),
+    );
+    const cabinetScreen = new THREE.Mesh(
+      new THREE.BoxGeometry(1.42, 0.82, 0.08),
+      new THREE.MeshStandardMaterial({
+        color: 0x0b1022,
+        roughness: 0.18,
+        emissive: 0x00e5ff,
+        emissiveIntensity: 0.8,
+      }),
+    );
+    cabinetScreen.position.set(0, 0.36, 0.4);
+
+    const controls = new THREE.Mesh(
+      new THREE.BoxGeometry(1.54, 0.32, 0.54),
+      makeMaterial(0xfff36d, 0xff9f1c, 0.4),
+    );
+    controls.position.set(0, -0.54, 0.52);
+    cabinet.add(cabinetBody, cabinetScreen, controls);
+    cabinet.position.set(0, -0.45, 0);
+    cabinet.rotation.y = -0.12;
+    world.add(cabinet);
+
+    const towerGeometry = new THREE.BoxGeometry(0.58, 1, 0.58);
+    const towers = projects.map((project, index) => {
+      const tower = new THREE.Mesh(towerGeometry, makeMaterial(project.color, project.color, 0.42));
+      const angle = (index / projects.length) * Math.PI * 2;
+      const radius = 3.35;
+      tower.position.set(Math.cos(angle) * radius, -1.12, Math.sin(angle) * radius);
+      tower.scale.y = 0.9 + index * 0.36;
+      tower.userData.baseScale = tower.scale.y;
+      skyline.add(tower);
+
+      const crown = new THREE.Mesh(
+        new THREE.SphereGeometry(0.18, 16, 16),
+        new THREE.MeshBasicMaterial({ color: project.secondary }),
+      );
+      crown.position.set(tower.position.x, -0.52 + tower.scale.y / 2, tower.position.z);
+      skyline.add(crown);
+      tower.userData.crown = crown;
+      return tower;
+    });
+
+    const padGeometry = new THREE.TorusGeometry(1.25, 0.018, 10, 100);
+    const rings = [0, 1, 2].map((index) => {
+      const ring = new THREE.Mesh(
+        padGeometry,
+        new THREE.MeshBasicMaterial({
+          color: index === 0 ? 0x00e5ff : index === 1 ? 0xff4fd8 : 0xfff36d,
+          transparent: true,
+          opacity: 0.5,
+        }),
+      );
+      ring.rotation.x = Math.PI / 2 + index * 0.18;
+      ring.scale.setScalar(1 + index * 0.7);
+      orbit.add(ring);
+      return ring;
+    });
+
+    const particlesGeometry = new THREE.BufferGeometry();
+    const particleCount = 900;
+    const positions = new Float32Array(particleCount * 3);
+    const colors = new Float32Array(particleCount * 3);
+    const colorSet = ["#00e5ff", "#ff4fd8", "#fff36d", "#00ffa8", "#8f7cff"].map(
+      (color) => new THREE.Color(color),
+    );
+
+    for (let index = 0; index < particleCount; index += 1) {
+      positions[index * 3] = (Math.random() - 0.5) * 34;
+      positions[index * 3 + 1] = (Math.random() - 0.5) * 19;
+      positions[index * 3 + 2] = (Math.random() - 0.5) * 28;
+      const color = colorSet[index % colorSet.length];
       colors[index * 3] = color.r;
       colors[index * 3 + 1] = color.g;
       colors[index * 3 + 2] = color.b;
     }
 
-    starGeometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-    starGeometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+    particlesGeometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+    particlesGeometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
 
-    const stars = new THREE.Points(
-      starGeometry,
+    const particles = new THREE.Points(
+      particlesGeometry,
       new THREE.PointsMaterial({
-        size: 0.034,
+        size: 0.045,
         vertexColors: true,
         transparent: true,
         opacity: 0.78,
         depthWrite: false,
       }),
     );
-    root.add(stars);
+    scene.add(particles);
 
-    const grid = new THREE.GridHelper(15, 15, 0x7be0c3, 0x263542);
-    grid.position.y = -3.65;
-    grid.material.transparent = true;
-    grid.material.opacity = 0.17;
-    root.add(grid);
+    scene.add(new THREE.AmbientLight(0xffffff, 1.35));
 
-    const nodeGroups = projects.map((project) => {
-      const node = makeNode(project);
-      projectNodes.set(project.id, node);
-      clickable.push(node.userData.core);
-      nodeLayer.add(node);
-      return node;
-    });
-
-    for (let index = 0; index < projects.length; index += 1) {
-      const current = new THREE.Vector3(...projects[index].position);
-      const next = new THREE.Vector3(...projects[(index + 1) % projects.length].position);
-      const geometry = new THREE.BufferGeometry().setFromPoints([current, next]);
-      const material = new THREE.LineBasicMaterial({
-        color: 0x7be0c3,
-        transparent: true,
-        opacity: 0.16,
-      });
-      lineLayer.add(new THREE.Line(geometry, material));
-    }
-
-    scene.add(new THREE.AmbientLight(0xbfd7ff, 1.2));
-
-    const keyLight = new THREE.PointLight(0xffcf66, 58, 42);
-    keyLight.position.set(5, 4, 8);
+    const keyLight = new THREE.PointLight(0xfff36d, 70, 50);
+    keyLight.position.set(4, 5, 8);
     scene.add(keyLight);
 
-    const tealLight = new THREE.PointLight(0x7be0c3, 34, 34);
-    tealLight.position.set(-6, -2, 6);
-    scene.add(tealLight);
+    const fillLight = new THREE.PointLight(0x00e5ff, 52, 44);
+    fillLight.position.set(-5, 1, 7);
+    scene.add(fillLight);
 
     function handlePointerMove(event) {
       pointer.x = event.clientX / window.innerWidth - 0.5;
       pointer.y = event.clientY / window.innerHeight - 0.5;
-    }
-
-    function handleClick(event) {
-      const mouse = new THREE.Vector2(
-        (event.clientX / window.innerWidth) * 2 - 1,
-        -(event.clientY / window.innerHeight) * 2 + 1,
-      );
-      raycaster.setFromCamera(mouse, camera);
-      const hit = raycaster.intersectObjects(clickable, false)[0];
-      if (hit?.object?.userData?.projectId) {
-        latestRef.current.onSelect(hit.object.userData.projectId);
-      }
-    }
-
-    function handleKeyDown(event) {
-      const number = Number(event.key);
-      if (number >= 1 && number <= projects.length) {
-        latestRef.current.onSelectIndex(number - 1);
-      }
     }
 
     function handleResize() {
@@ -198,41 +197,55 @@ export default function Scene({
     }
 
     window.addEventListener("pointermove", handlePointerMove);
-    window.addEventListener("click", handleClick);
-    window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("resize", handleResize);
 
     const clock = new THREE.Clock();
     let frameId = 0;
+
     function animate() {
       frameId = window.requestAnimationFrame(animate);
       const elapsed = clock.getElapsedTime();
-      const { activeId: currentActiveId, boostOn: currentBoost, scannerOn: currentScanner } =
-        latestRef.current;
-      const speed = currentBoost ? 1.85 : 1;
+      const { activeProject: currentProject, powerOn: currentPower } = latestRef.current;
+      const activeColor = new THREE.Color(currentProject.color);
+      const secondaryColor = new THREE.Color(currentProject.secondary);
+      const auraColor = new THREE.Color(currentProject.aura);
+      const speed = currentPower ? 1.45 : 0.72;
 
-      root.rotation.y += 0.0012 * speed;
-      stars.rotation.y += 0.0009 * speed;
-      grid.position.z = ((elapsed * speed) % 1) - 0.5;
+      world.rotation.y += 0.003 * speed;
+      orbit.rotation.y -= 0.012 * speed;
+      particles.rotation.y += 0.0009 * speed;
+      cabinet.rotation.y = Math.sin(elapsed * 0.8) * 0.18;
+      cabinet.position.y = -0.42 + Math.sin(elapsed * 1.7) * 0.08;
 
-      camera.position.x += (pointer.x * 1.35 - camera.position.x) * 0.035;
-      camera.position.y += (0.45 + pointer.y * -0.75 - camera.position.y) * 0.035;
-      camera.lookAt(0, -0.2, 0);
+      cabinetBody.material.color.lerp(activeColor, 0.045);
+      cabinetBody.material.emissive.lerp(activeColor, 0.045);
+      cabinetScreen.material.emissive.lerp(secondaryColor, 0.05);
+      controls.material.color.lerp(auraColor, 0.05);
+      platformEdge.material.color.lerp(activeColor, 0.045);
+      keyLight.color.lerp(auraColor, 0.04);
+      fillLight.color.lerp(secondaryColor, 0.04);
 
-      nodeGroups.forEach((node, index) => {
-        const isActive = node.userData.projectId === currentActiveId;
-        const pulse = 1 + Math.sin(elapsed * 2.4 + index) * 0.04;
-        const targetScale = (isActive ? 1.55 : 1) * pulse;
-        node.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.07);
-        node.rotation.y += (0.012 + index * 0.001) * speed;
-        node.rotation.x += 0.004 * speed;
-        node.userData.halo.material.opacity = isActive ? 0.18 : 0.07;
-        node.userData.rings.forEach((ring, ringIndex) => {
-          ring.visible = currentScanner || isActive;
-          ring.rotation.z += (0.01 + ringIndex * 0.006) * speed;
-          ring.material.opacity = isActive ? 0.72 : 0.28;
-        });
+      towers.forEach((tower, index) => {
+        const project = projects[index];
+        const isActive = project.id === currentProject.id;
+        const targetColor = new THREE.Color(isActive ? currentProject.color : project.color);
+        tower.material.color.lerp(targetColor, 0.04);
+        tower.material.emissive.lerp(targetColor, 0.04);
+        const lift = isActive ? 1.6 : 1;
+        tower.scale.y += (tower.userData.baseScale * lift - tower.scale.y) * 0.07;
+        tower.rotation.y += 0.012 * speed;
+        tower.userData.crown.position.y =
+          -0.52 + tower.scale.y / 2 + Math.sin(elapsed * 2 + index) * 0.08;
       });
+
+      rings.forEach((ring, index) => {
+        ring.rotation.z += (0.008 + index * 0.004) * speed;
+        ring.material.opacity = currentPower ? 0.68 - index * 0.1 : 0.3 - index * 0.05;
+      });
+
+      camera.position.x += (pointer.x * 1.6 - camera.position.x) * 0.035;
+      camera.position.y += (3.1 + pointer.y * -0.9 - camera.position.y) * 0.035;
+      camera.lookAt(0, -0.65, 0);
 
       renderer.render(scene, camera);
     }
@@ -242,22 +255,12 @@ export default function Scene({
     return () => {
       window.cancelAnimationFrame(frameId);
       window.removeEventListener("pointermove", handlePointerMove);
-      window.removeEventListener("click", handleClick);
-      window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("resize", handleResize);
       mount.removeChild(renderer.domElement);
+      disposeObject(world);
+      particlesGeometry.dispose();
+      particles.material.dispose();
       renderer.dispose();
-      starGeometry.dispose();
-      nodeGroups.forEach((node) => {
-        node.traverse((child) => {
-          child.geometry?.dispose();
-          child.material?.dispose();
-        });
-      });
-      lineLayer.traverse((child) => {
-        child.geometry?.dispose();
-        child.material?.dispose();
-      });
     };
   }, [projects]);
 

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Scene from "./Scene.jsx";
 import {
   capabilities,
@@ -10,184 +10,251 @@ import {
   timeline,
 } from "./data.js";
 
-export default function App() {
-  const [activeId, setActiveId] = useState(projects[0].id);
-  const [scannerOn, setScannerOn] = useState(true);
-  const [boostOn, setBoostOn] = useState(false);
+const modes = ["Projects", "Skills", "Resume"];
+const skillGroups = ["All", "Frontend", "Backend", "Data", "Systems", "Desktop", "IT"];
 
-  const activeProject = useMemo(
-    () => projects.find((project) => project.id === activeId) ?? projects[0],
-    [activeId],
+export default function App() {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [mode, setMode] = useState(modes[0]);
+  const [skillGroup, setSkillGroup] = useState(skillGroups[0]);
+  const [powerOn, setPowerOn] = useState(true);
+  const [openExperience, setOpenExperience] = useState(0);
+
+  const activeProject = projects[activeIndex];
+  const filteredCapabilities = useMemo(
+    () =>
+      skillGroup === "All"
+        ? capabilities
+        : capabilities.filter((capability) => capability.group === skillGroup),
+    [skillGroup],
   );
 
-  function selectByIndex(index) {
-    const project = projects[index];
-    if (project) {
-      setActiveId(project.id);
+  useEffect(() => {
+    function handleKeyDown(event) {
+      if (event.key === "ArrowRight") {
+        setActiveIndex((value) => (value + 1) % projects.length);
+      }
+      if (event.key === "ArrowLeft") {
+        setActiveIndex((value) => (value - 1 + projects.length) % projects.length);
+      }
+      const number = Number(event.key);
+      if (number >= 1 && number <= projects.length) {
+        setActiveIndex(number - 1);
+      }
     }
-  }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   return (
-    <main className="stage" aria-label="Aayan Amir interactive portfolio">
-      <Scene
-        activeId={activeId}
-        boostOn={boostOn}
-        scannerOn={scannerOn}
-        onSelect={setActiveId}
-        onSelectIndex={selectByIndex}
-        projects={projects}
-      />
-
-      <div className="scanlines" aria-hidden="true" />
+    <main
+      className="site-shell"
+      style={{
+        "--active": activeProject.color,
+        "--active-secondary": activeProject.secondary,
+        "--active-aura": activeProject.aura,
+      }}
+    >
+      <Scene activeProject={activeProject} powerOn={powerOn} projects={projects} />
 
       <header className="topbar">
         <a className="brand" href="#home" aria-label="Aayan Amir home">
           <span className="brand-mark">AA</span>
           <span>
             <strong>{profile.name}</strong>
-            <small>{profile.domain}</small>
+            <small>{profile.role}</small>
           </span>
         </a>
-        <nav aria-label="Portfolio links">
-          <a href={profile.github}>GitHub</a>
-          <a href={`mailto:${profile.email}`}>Contact</a>
+
+        <nav aria-label="Portfolio sections">
+          {modes.map((item) => (
+            <button
+              className={mode === item ? "nav-pill active" : "nav-pill"}
+              key={item}
+              onClick={() => setMode(item)}
+              type="button"
+            >
+              {item}
+            </button>
+          ))}
         </nav>
       </header>
 
       <section className="hero" id="home">
-        <p className="eyebrow">{profile.role} / {profile.location}</p>
-        <h1>{profile.name}</h1>
-        <p className="intro">{profile.headline}</p>
-        <p className="summary">{profile.summary}</p>
-
-        <div className="actions" aria-label="Primary links">
-          <a className="button primary" href={activeProject.repo}>
-            Open Active Repo
-          </a>
-          <button
-            className="button"
-            type="button"
-            onClick={() => setBoostOn((value) => !value)}
-          >
-            {boostOn ? "Boost On" : "Boost Off"}
-          </button>
-          <button
-            className="button"
-            type="button"
-            onClick={() => setScannerOn((value) => !value)}
-          >
-            {scannerOn ? "Scanner On" : "Scanner Off"}
-          </button>
-        </div>
-      </section>
-
-      <aside className="mission-panel" aria-label="Selected project">
-        <div className="panel-kicker">
-          <span>{activeProject.number}</span>
-          <span>{activeProject.type}</span>
-        </div>
-        <h2>{activeProject.title}</h2>
-        <p>{activeProject.text}</p>
-        <div className="chip-row" aria-label="Technology stack">
-          {activeProject.stack.map((item) => (
-            <span className="chip" key={item}>
-              {item}
-            </span>
-          ))}
-        </div>
-        <div className="stat-grid">
-          {activeProject.stats.map((item) => (
-            <span key={item}>{item}</span>
-          ))}
-        </div>
-      </aside>
-
-      <section className="project-dock" aria-label="Project selector">
-        {projects.map((project, index) => (
-          <button
-            className={project.id === activeId ? "dock-item active" : "dock-item"}
-            key={project.id}
-            onClick={() => setActiveId(project.id)}
-            style={{ "--project-color": project.color }}
-            type="button"
-          >
-            <span>{index + 1}</span>
-            <strong>{project.title}</strong>
-          </button>
-        ))}
-      </section>
-
-      <section className="systems">
-        <div className="systems-copy">
-          <p className="eyebrow">Professional summary</p>
-          <h2>Business software with game-interface energy.</h2>
-          <p>
-            Your CV and GitHub history point in the same direction: inventory,
-            POS, ERP modules, authentication, RBAC, dashboards, reports, CRUD
-            apps, databases, and production-minded workflows.
-          </p>
+        <div className="hero-copy">
+          <span className="level-tag">{profile.location}</span>
+          <h1>{profile.name}</h1>
+          <p className="hero-line">{profile.headline}</p>
+          <div className="hero-actions" aria-label="Main actions">
+            <a className="mega-button" href={activeProject.repo}>
+              Launch {activeProject.title}
+            </a>
+            <button
+              className={powerOn ? "mega-button ghost active" : "mega-button ghost"}
+              onClick={() => setPowerOn((value) => !value)}
+              type="button"
+            >
+              Neon Engine
+            </button>
+          </div>
         </div>
 
-        <div className="capability-grid" aria-label="Capabilities">
-          {capabilities.map((capability) => (
-            <span key={capability}>{capability}</span>
-          ))}
-        </div>
-      </section>
-
-      <section className="resume-grid" aria-label="Resume details">
-        <div className="resume-column">
-          <p className="eyebrow">Experience</p>
-          {experience.map((item) => (
-            <article className="resume-card" key={`${item.company}-${item.role}`}>
-              <div>
-                <h3>{item.role}</h3>
-                <span>
-                  {item.company} / {item.location} / {item.dates}
-                </span>
-              </div>
-              <ul>
-                {item.points.map((point) => (
-                  <li key={point}>{point}</li>
-                ))}
-              </ul>
-            </article>
-          ))}
-        </div>
-
-        <div className="resume-column">
-          <p className="eyebrow">Education</p>
-          <article className="resume-card education-card">
-            <h3>{education.degree}</h3>
-            <span>{education.school}</span>
-            <p>{education.detail}</p>
-            <p>{education.focus}</p>
-          </article>
-
-          <p className="eyebrow strengths-title">Strengths</p>
-          <div className="strength-grid">
-            {strengths.map((strength) => (
-              <span key={strength}>{strength}</span>
-            ))}
+        <div className="player-card" aria-label="Current player profile">
+          <span>Player Card</span>
+          <strong>{profile.role}</strong>
+          <p>{profile.summary}</p>
+          <div className="meter-row">
+            <span>BSCS</span>
+            <span>CGPA 3.62</span>
+            <span>CCNA Track</span>
           </div>
         </div>
       </section>
 
-      <section className="timeline" aria-label="Recent GitHub activity">
-        <p className="eyebrow">Recent GitHub signal</p>
-        <div className="timeline-list">
-          {timeline.map((item) => (
+      <section className="level-select" aria-label="Project level select">
+        <div className="section-title">
+          <span>Project Worlds</span>
+          <h2>Pick a level. The whole scene changes.</h2>
+        </div>
+
+        <div className="level-grid">
+          {projects.map((project, index) => (
+            <button
+              className={activeIndex === index ? "level-card active" : "level-card"}
+              key={project.id}
+              onClick={() => setActiveIndex(index)}
+              style={{
+                "--card-color": project.color,
+                "--card-secondary": project.secondary,
+              }}
+              type="button"
+            >
+              <span>{project.number}</span>
+              <strong>{project.title}</strong>
+              <small>{project.type}</small>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section className="project-stage" aria-label="Active project details">
+        <div className="project-marquee">
+          <span>{activeProject.type}</span>
+          <h2>{activeProject.title}</h2>
+        </div>
+
+        <div className="project-info">
+          <p>{activeProject.text}</p>
+          <div className="tag-wall" aria-label="Technology stack">
+            {activeProject.stack.map((item) => (
+              <span key={item}>{item}</span>
+            ))}
+          </div>
+        </div>
+
+        <div className="achievement-strip" aria-label="Project highlights">
+          {activeProject.stats.map((item) => (
+            <button key={item} type="button">
+              {item}
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section className={mode === "Skills" ? "mode-panel show" : "mode-panel"}>
+        <div className="section-title">
+          <span>Skill Mixer</span>
+          <h2>Switch the loadout.</h2>
+        </div>
+
+        <div className="filter-row" aria-label="Skill filters">
+          {skillGroups.map((group) => (
+            <button
+              className={skillGroup === group ? "filter-button active" : "filter-button"}
+              key={group}
+              onClick={() => setSkillGroup(group)}
+              type="button"
+            >
+              {group}
+            </button>
+          ))}
+        </div>
+
+        <div className="skill-grid">
+          {filteredCapabilities.map((capability) => (
+            <article className="skill-tile" key={capability.label}>
+              <span>{capability.group}</span>
+              <strong>{capability.label}</strong>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className={mode === "Resume" ? "mode-panel show" : "mode-panel"}>
+        <div className="section-title">
+          <span>Resume Run</span>
+          <h2>Experience, education, and strengths.</h2>
+        </div>
+
+        <div className="resume-run">
+          <div className="experience-stack">
+            {experience.map((item, index) => (
+              <button
+                className={openExperience === index ? "experience-card active" : "experience-card"}
+                key={`${item.company}-${item.role}`}
+                onClick={() => setOpenExperience(index)}
+                type="button"
+              >
+                <span>{item.dates}</span>
+                <strong>{item.role}</strong>
+                <small>{item.company} / {item.location}</small>
+                {openExperience === index && (
+                  <ul>
+                    {item.points.map((point) => (
+                      <li key={point}>{point}</li>
+                    ))}
+                  </ul>
+                )}
+              </button>
+            ))}
+          </div>
+
+          <div className="education-panel">
+            <span>Education</span>
+            <h3>{education.degree}</h3>
+            <p>{education.school}</p>
+            <p>{education.detail}</p>
+            <div className="strength-track">
+              {strengths.map((strength) => (
+                <button key={strength} type="button">
+                  {strength}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="activity-rail" aria-label="Recent GitHub activity">
+        <div className="section-title">
+          <span>GitHub Activity</span>
+          <h2>Recent work signal.</h2>
+        </div>
+
+        <div className="activity-track">
+          {timeline.map((item, index) => (
             <article key={`${item.repo}-${item.title}`}>
-              <span>{item.label}</span>
+              <span>{String(index + 1).padStart(2, "0")}</span>
               <h3>{item.title}</h3>
-              <p>{item.repo}</p>
+              <p>{item.label} / {item.repo}</p>
             </article>
           ))}
         </div>
       </section>
 
       <footer className="footer">
-        <span>Use mouse movement, click the 3D nodes, or press 1-5.</span>
+        <a href={profile.github}>github.com/{profile.handle}</a>
         <a href={`mailto:${profile.email}`}>{profile.email}</a>
       </footer>
     </main>
