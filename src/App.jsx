@@ -20,31 +20,31 @@ const projectPositions = [
 const specialPortals = [
   {
     id: "skills",
-    title: "Skill Vault",
+    title: "Skills",
     type: "Loadout",
-    color: "#00ffa8",
-    secondary: "#00e5ff",
-    aura: "#fff36d",
+    color: "#14f195",
+    secondary: "#19d7ff",
+    aura: "#f8d84a",
     x: 0,
     z: 3.85,
   },
   {
     id: "resume",
-    title: "Resume Gate",
+    title: "Resume",
     type: "Story",
-    color: "#ff9f1c",
-    secondary: "#ff4fd8",
-    aura: "#00e5ff",
+    color: "#f8d84a",
+    secondary: "#7c5cff",
+    aura: "#19d7ff",
     x: -6.2,
     z: 1.1,
   },
   {
     id: "contact",
-    title: "Contact Portal",
+    title: "Contact",
     type: "Exit",
-    color: "#ff4fd8",
-    secondary: "#fff36d",
-    aura: "#00ffa8",
+    color: "#7c5cff",
+    secondary: "#19d7ff",
+    aura: "#f8d84a",
     x: 6.2,
     z: 1.25,
   },
@@ -70,14 +70,14 @@ function getPortalCopy(portal) {
   }
 
   if (portal.id === "skills") {
-    return "A compact loadout of the tools and systems Aayan works with.";
+    return "Frontend, backend, data, systems, desktop, and IT support.";
   }
 
   if (portal.id === "resume") {
-    return "Work, education, and strengths in a quick playable checkpoint.";
+    return "Experience, education, and strengths in one quick checkpoint.";
   }
 
-  return "Open GitHub or send an email. No phone number exposed publicly.";
+  return "Open GitHub or send an email.";
 }
 
 export default function App() {
@@ -85,8 +85,6 @@ export default function App() {
   const [activePortalId, setActivePortalId] = useState(portals[0].id);
   const [discovered, setDiscovered] = useState(() => new Set([portals[0].id]));
   const [travelTarget, setTravelTarget] = useState(null);
-  const [virtualMove, setVirtualMove] = useState(null);
-  const [boost, setBoost] = useState(false);
 
   const activePortal = portals.find((portal) => portal.id === activePortalId) ?? portals[0];
   const discoveryCount = discovered.size;
@@ -119,11 +117,11 @@ export default function App() {
     >
       <Scene
         activePortalId={activePortal.id}
-        boost={boost}
+        boost={false}
         onActivate={activatePortal}
         portals={portals}
         travelTarget={travelTarget}
-        virtualMove={virtualMove}
+        virtualMove={null}
       />
 
       <header className="game-topbar">
@@ -132,21 +130,21 @@ export default function App() {
           <strong>{profile.name}</strong>
         </a>
         <div className="score-pill">
-          <b>{discoveryCount}</b> / {portals.length} discovered
+          <b>{discoveryCount}</b> / {portals.length} visited
         </div>
       </header>
 
       <section className="start-card" aria-label="Playable instructions">
         <span>{profile.role}</span>
-        <h1>Playable Portfolio</h1>
-        <p>Move with WASD/arrows, click the map, or beam from the dock.</p>
+        <h1>Aayan's Dev Arcade</h1>
+        <p>Move with WASD/arrows. On phone, tap the map or use the dock.</p>
       </section>
 
       <aside className="portal-card" aria-live="polite">
         <div className="portal-card-top">
           <span>{activePortal.type}</span>
           <button onClick={() => beamTo(activePortal)} type="button">
-            Beam
+            Go
           </button>
         </div>
 
@@ -161,7 +159,7 @@ export default function App() {
               ))}
             </div>
             <a className="launch-link" href={activePortal.repo}>
-              Open Repo
+              View Repo
             </a>
           </>
         )}
@@ -205,54 +203,11 @@ export default function App() {
             style={{ "--portal-color": portal.color }}
             type="button"
           >
-            <span>{discovered.has(portal.id) ? "ON" : "NEW"}</span>
+            <span>{discovered.has(portal.id) ? "OK" : "NEW"}</span>
             {portal.title}
           </button>
         ))}
       </nav>
-
-      <div className="touch-pad" aria-label="Movement controls">
-        <button
-          onPointerDown={() => setVirtualMove("up")}
-          onPointerLeave={() => setVirtualMove(null)}
-          onPointerUp={() => setVirtualMove(null)}
-          type="button"
-        >
-          Up
-        </button>
-        <button
-          onPointerDown={() => setVirtualMove("left")}
-          onPointerLeave={() => setVirtualMove(null)}
-          onPointerUp={() => setVirtualMove(null)}
-          type="button"
-        >
-          Left
-        </button>
-        <button
-          onPointerDown={() => setBoost(true)}
-          onPointerLeave={() => setBoost(false)}
-          onPointerUp={() => setBoost(false)}
-          type="button"
-        >
-          Dash
-        </button>
-        <button
-          onPointerDown={() => setVirtualMove("right")}
-          onPointerLeave={() => setVirtualMove(null)}
-          onPointerUp={() => setVirtualMove(null)}
-          type="button"
-        >
-          Right
-        </button>
-        <button
-          onPointerDown={() => setVirtualMove("down")}
-          onPointerLeave={() => setVirtualMove(null)}
-          onPointerUp={() => setVirtualMove(null)}
-          type="button"
-        >
-          Down
-        </button>
-      </div>
     </main>
   );
 }

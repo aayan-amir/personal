@@ -411,7 +411,7 @@ export default function Scene({
           player.position.x - portalGroup.position.x,
           player.position.z - portalGroup.position.z,
         );
-        const showLabel = isActive || portalDistance < 1.9;
+        const showLabel = window.innerWidth > 760 && (isActive || portalDistance < 1.9);
         const targetScale = isActive ? 1.2 : 1;
         portalGroup.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.08);
         portalGroup.userData.ring.rotation.z += delta * (isActive ? 2.2 : 1.05);

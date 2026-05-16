@@ -7,9 +7,9 @@ export const profile = {
   domain: "aayanamir.tech",
   github: "https://github.com/aayan-amir",
   headline:
-    "BS Computer Science student and software developer building inventory, POS, ERP, and database-backed business systems.",
+    "Software developer building inventory, POS, ERP, and database-backed business systems.",
   summary:
-    "Hands-on full-stack developer focused on translating real business workflows into practical software for stock tracking, sales, purchases, reporting, user roles, dashboards, and database-backed operations.",
+    "Full-stack JavaScript, C#, SQL, MongoDB, and practical business workflow software.",
 };
 
 export const projects = [
@@ -31,13 +31,13 @@ export const projects = [
   {
     id: "imei-stock",
     number: "02",
-    title: "IMEI Stock App",
+    title: "Stock-ly",
     type: "Stock-ly / POS Platform",
     repo: "https://github.com/aayan-amir/IMEI-STOCK-APP",
     stack: ["Node", "Express", "MongoDB", "Vanilla JS", "Android Shell"],
-    color: "#f8d84a",
+    color: "#14f195",
     secondary: "#19d7ff",
-    aura: "#14f195",
+    aura: "#f8d84a",
     text: "Multi-tenant IMEI stock and POS app for several mobile shops, covering sales logs, daily sheets, expenses, monthly P&L, CEO dashboards, model analytics, backups, reports, and tenant administration.",
     playSummary: "A multi-shop IMEI stock and POS platform with reports, tenants, dashboards, and backups.",
     stats: ["Gate/admin/shop auth", "MongoDB TTL sessions", "Super-admin controls"],
@@ -61,11 +61,11 @@ export const projects = [
   {
     id: "stockapp",
     number: "04",
-    title: "Stock Management",
+    title: "Stock Desk",
     type: "Next.js Dashboard",
     repo: "https://github.com/aayan-amir/stockapp",
     stack: ["Next.js", "Prisma", "Supabase", "Tailwind"],
-    color: "#ff4fd8",
+    color: "#f8d84a",
     secondary: "#7c5cff",
     aura: "#19d7ff",
     text: "Modern inventory, purchases, and sales system converted from a Microsoft Access VBA workflow, with live KPIs, stock browser, purchase entries, invoices, customer records, ledger, settings, and PIN login.",
@@ -76,11 +76,11 @@ export const projects = [
   {
     id: "debug-sim",
     number: "05",
-    title: "Code Debugging Simulator",
+    title: "Debug Sim",
     type: "Learning Game",
     repo: "https://github.com/aayan-amir/Code-Debugging-Simulator",
     stack: ["C#", "WinForms", "MySQL", "ReaLTaiizor"],
-    color: "#14f195",
+    color: "#19d7ff",
     secondary: "#19d7ff",
     aura: "#f8d84a",
     text: "Educational debugging simulator with database-driven questions, fill-in-the-blanks, MCQs, score tracking, and a scoreboard for programming practice.",
@@ -119,18 +119,18 @@ export const timeline = [
 ];
 
 export const capabilities = [
-  { label: "React and Vite interfaces", group: "Frontend" },
+  { label: "React + Vite", group: "Frontend" },
   { label: "Next.js dashboards", group: "Frontend" },
-  { label: "Tailwind and responsive UI", group: "Frontend" },
+  { label: "Responsive UI", group: "Frontend" },
   { label: "Express APIs", group: "Backend" },
-  { label: "Auth, RBAC, sessions", group: "Backend" },
-  { label: "Deployment and production hardening", group: "Backend" },
-  { label: "Postgres, Prisma, MongoDB", group: "Data" },
-  { label: "SQL queries and data validation", group: "Data" },
-  { label: "Inventory and ERP workflows", group: "Systems" },
-  { label: "Admin dashboards and reports", group: "Systems" },
+  { label: "Auth + RBAC", group: "Backend" },
+  { label: "Deploy hardening", group: "Backend" },
+  { label: "Postgres / Prisma", group: "Data" },
+  { label: "MongoDB / SQL", group: "Data" },
+  { label: "Inventory workflows", group: "Systems" },
+  { label: "Dashboards + reports", group: "Systems" },
   { label: "C# Windows Forms", group: "Desktop" },
-  { label: "LAN, printers, and office IT support", group: "IT" },
+  { label: "Office IT support", group: "IT" },
 ];
 
 export const experience = [

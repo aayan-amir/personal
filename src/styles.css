@@ -81,8 +81,7 @@ button {
 .game-topbar,
 .start-card,
 .portal-card,
-.portal-dock,
-.touch-pad {
+.portal-dock {
   position: fixed;
   z-index: 3;
 }
@@ -102,8 +101,7 @@ button {
 .score-pill,
 .start-card,
 .portal-card,
-.portal-dock,
-.touch-pad button {
+.portal-dock {
   border: 2px solid rgba(255, 255, 255, 0.72);
   border-radius: 8px;
   background: var(--glass);
@@ -335,28 +333,6 @@ h3 {
   font-size: 0.72rem;
 }
 
-.touch-pad {
-  right: 20px;
-  bottom: 128px;
-  display: none;
-  grid-template-columns: repeat(3, 62px);
-  gap: 8px;
-  pointer-events: auto;
-}
-
-.touch-pad button {
-  min-height: 50px;
-  border-color: rgba(255, 255, 255, 0.52);
-  color: #fff;
-  font-size: 0.78rem;
-  font-weight: 900;
-}
-
-.touch-pad button:first-child,
-.touch-pad button:last-child {
-  grid-column: 2;
-}
-
 @media (max-width: 980px) {
   .start-card {
     width: min(300px, calc(100vw - 40px));
@@ -374,11 +350,6 @@ h3 {
     max-height: 42vh;
   }
 
-  .touch-pad {
-    left: 20px;
-    right: auto;
-  }
-
   .portal-dock {
     grid-template-columns: repeat(8, minmax(130px, 1fr));
   }
@@ -386,13 +357,13 @@ h3 {
 
 @media (max-width: 700px) {
   .game-topbar {
-    top: 12px;
-    left: 12px;
-    right: 12px;
+    top: 10px;
+    left: 10px;
+    right: 10px;
   }
 
   .brand {
-    padding: 7px;
+    padding: 6px;
   }
 
   .brand strong {
@@ -400,67 +371,81 @@ h3 {
   }
 
   .score-pill {
-    padding: 9px 11px;
-    font-size: 0.86rem;
+    padding: 8px 10px;
+    font-size: 0.78rem;
   }
 
   .start-card {
-    top: 78px;
-    left: 12px;
-    width: calc(100vw - 24px);
-    padding: 13px;
+    top: 72px;
+    left: 10px;
+    width: min(270px, calc(100vw - 20px));
+    padding: 11px;
   }
 
   .start-card h1 {
-    margin: 10px 0 6px;
-    font-size: 1.48rem;
+    margin: 8px 0 5px;
+    font-size: 1.25rem;
+    line-height: 1;
   }
 
   .start-card p {
-    font-size: 0.9rem;
+    font-size: 0.78rem;
+    line-height: 1.35;
   }
 
   .portal-card {
-    left: 12px;
-    right: 12px;
-    bottom: 110px;
+    left: 10px;
+    right: 10px;
+    bottom: 86px;
     width: auto;
-    padding: 14px;
-    max-height: 190px;
+    padding: 12px;
+    max-height: 166px;
   }
 
   .portal-card h2 {
-    font-size: 1.85rem;
+    margin: 10px 0 7px;
+    font-size: 1.42rem;
+    line-height: 1.02;
   }
 
-  .portal-card p,
+  .portal-card p {
+    display: block;
+    font-size: 0.84rem;
+    line-height: 1.35;
+  }
+
+  .mini-tags,
   .loadout-grid,
   .resume-snapshot {
     display: none;
   }
 
+  .launch-link,
+  .contact-actions a,
+  .portal-card-top button {
+    padding: 8px 10px;
+    font-size: 0.82rem;
+  }
+
   .portal-dock {
-    left: 12px;
-    right: 12px;
-    bottom: 12px;
-    grid-template-columns: repeat(8, minmax(118px, 1fr));
-    padding: 8px;
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    grid-template-columns: repeat(8, minmax(96px, 1fr));
+    max-height: 68px;
+    padding: 7px;
+    gap: 7px;
   }
 
   .portal-dock button {
-    min-height: 56px;
-    font-size: 0.78rem;
+    min-height: 48px;
+    padding: 7px;
+    font-size: 0.72rem;
+    line-height: 1.05;
   }
 
-  .touch-pad {
-    left: auto;
-    right: 12px;
-    bottom: 236px;
-    display: grid;
-    grid-template-columns: repeat(3, 52px);
-  }
-
-  .touch-pad button {
-    min-height: 44px;
+  .portal-dock span {
+    margin-bottom: 4px;
+    font-size: 0.62rem;
   }
 }
