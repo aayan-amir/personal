@@ -1,16 +1,6 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 
-function makeMaterial(color, emissive = color, intensity = 0.45) {
-  return new THREE.MeshStandardMaterial({
-    color,
-    roughness: 0.28,
-    metalness: 0.2,
-    emissive,
-    emissiveIntensity: intensity,
-  });
-}
-
 function disposeObject(object) {
   object.traverse((child) => {
     child.geometry?.dispose();
@@ -22,26 +12,131 @@ function disposeObject(object) {
   });
 }
 
-export default function Scene({ activeProject, powerOn, projects }) {
+function makeLabel(text, color) {
+  const canvas = document.createElement("canvas");
+  canvas.width = 512;
+  canvas.height = 160;
+  const context = canvas.getContext("2d");
+  context.clearRect(0, 0, canvas.width, canvas.height);
+  context.fillStyle = "rgba(10, 4, 22, 0.78)";
+  context.strokeStyle = "#ffffff";
+  context.lineWidth = 8;
+  context.roundRect(10, 22, 492, 96, 22);
+  context.fill();
+  context.stroke();
+  context.fillStyle = color;
+  context.font = "900 42px Arial";
+  context.textAlign = "center";
+  context.textBaseline = "middle";
+  context.fillText(text, 256, 70, 440);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  const sprite = new THREE.Sprite(
+    new THREE.SpriteMaterial({
+      map: texture,
+      transparent: true,
+      depthTest: false,
+    }),
+  );
+  sprite.scale.set(2.65, 0.82, 1);
+  return sprite;
+}
+
+function makePortal(portal) {
+  const group = new THREE.Group();
+  group.position.set(portal.x, 0, portal.z);
+  group.userData.portalId = portal.id;
+
+  const color = new THREE.Color(portal.color);
+  const secondary = new THREE.Color(portal.secondary);
+
+  const base = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.92, 1.08, 0.2, 48),
+    new THREE.MeshStandardMaterial({
+      color,
+      emissive: color,
+      emissiveIntensity: 0.5,
+      roughness: 0.24,
+      metalness: 0.25,
+    }),
+  );
+  base.position.y = 0.1;
+  base.userData.portalId = portal.id;
+
+  const ring = new THREE.Mesh(
+    new THREE.TorusGeometry(0.92, 0.045, 12, 96),
+    new THREE.MeshBasicMaterial({
+      color: secondary,
+      transparent: true,
+      opacity: 0.85,
+    }),
+  );
+  ring.position.y = 0.42;
+  ring.rotation.x = Math.PI / 2;
+  ring.userData.portalId = portal.id;
+
+  const beam = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.52, 0.18, 2.5, 32, 1, true),
+    new THREE.MeshBasicMaterial({
+      color,
+      transparent: true,
+      opacity: 0.18,
+      side: THREE.DoubleSide,
+    }),
+  );
+  beam.position.y = 1.35;
+  beam.userData.portalId = portal.id;
+
+  const label = makeLabel(portal.title, portal.color);
+  label.position.y = 2.85;
+  label.userData.portalId = portal.id;
+
+  group.add(base, ring, beam, label);
+  group.userData.ring = ring;
+  group.userData.beam = beam;
+  return group;
+}
+
+export default function Scene({
+  activePortalId,
+  boost,
+  onActivate,
+  portals,
+  travelTarget,
+  virtualMove,
+}) {
   const mountRef = useRef(null);
-  const latestRef = useRef({ activeProject, powerOn });
+  const latestRef = useRef({
+    activePortalId,
+    boost,
+    onActivate,
+    travelTarget,
+    virtualMove,
+  });
 
   useEffect(() => {
-    latestRef.current = { activeProject, powerOn };
-  }, [activeProject, powerOn]);
+    latestRef.current = {
+      activePortalId,
+      boost,
+      onActivate,
+      travelTarget,
+      virtualMove,
+    };
+  }, [activePortalId, boost, onActivate, travelTarget, virtualMove]);
 
   useEffect(() => {
     const mount = mountRef.current;
     const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x12091f, 0.038);
+    scene.fog = new THREE.FogExp2(0x150724, 0.04);
 
     const camera = new THREE.PerspectiveCamera(
-      52,
+      48,
       window.innerWidth / window.innerHeight,
       0.1,
-      120,
+      140,
     );
-    camera.position.set(0, 3.1, 10.8);
+    camera.position.set(0, 8.2, 8.4);
 
     const renderer = new THREE.WebGLRenderer({
       alpha: true,
@@ -53,108 +148,105 @@ export default function Scene({ activeProject, powerOn, projects }) {
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     mount.appendChild(renderer.domElement);
 
-    const pointer = new THREE.Vector2();
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+    const keys = new Set();
+    const playerTarget = new THREE.Vector3(-0.2, 0, 0.15);
     const world = new THREE.Group();
-    const skyline = new THREE.Group();
-    const orbit = new THREE.Group();
     scene.add(world);
-    world.add(skyline, orbit);
 
-    const platform = new THREE.Mesh(
-      new THREE.CylinderGeometry(4.8, 5.4, 0.48, 8),
-      makeMaterial(0x2b1659, 0x5d28ff, 0.35),
-    );
-    platform.position.y = -1.9;
-    platform.rotation.y = Math.PI / 8;
-    world.add(platform);
-
-    const platformEdge = new THREE.Mesh(
-      new THREE.TorusGeometry(5.1, 0.035, 10, 160),
-      new THREE.MeshBasicMaterial({
-        color: 0x00e5ff,
-        transparent: true,
-        opacity: 0.9,
-      }),
-    );
-    platformEdge.position.y = -1.62;
-    platformEdge.rotation.x = Math.PI / 2;
-    world.add(platformEdge);
-
-    const cabinet = new THREE.Group();
-    const cabinetBody = new THREE.Mesh(
-      new THREE.BoxGeometry(1.9, 2.5, 0.72),
-      makeMaterial(0xff4fd8, 0xff4fd8, 0.32),
-    );
-    const cabinetScreen = new THREE.Mesh(
-      new THREE.BoxGeometry(1.42, 0.82, 0.08),
+    const floor = new THREE.Mesh(
+      new THREE.CircleGeometry(8, 96),
       new THREE.MeshStandardMaterial({
-        color: 0x0b1022,
-        roughness: 0.18,
-        emissive: 0x00e5ff,
-        emissiveIntensity: 0.8,
+        color: 0x2b1155,
+        emissive: 0x250047,
+        emissiveIntensity: 0.26,
+        roughness: 0.48,
+        metalness: 0.08,
       }),
     );
-    cabinetScreen.position.set(0, 0.36, 0.4);
+    floor.rotation.x = -Math.PI / 2;
+    floor.name = "floor";
+    world.add(floor);
 
-    const controls = new THREE.Mesh(
-      new THREE.BoxGeometry(1.54, 0.32, 0.54),
-      makeMaterial(0xfff36d, 0xff9f1c, 0.4),
+    const grid = new THREE.GridHelper(15.5, 18, 0x00e5ff, 0x5a287c);
+    grid.position.y = 0.012;
+    grid.material.transparent = true;
+    grid.material.opacity = 0.34;
+    world.add(grid);
+
+    const rim = new THREE.Mesh(
+      new THREE.TorusGeometry(8, 0.035, 12, 180),
+      new THREE.MeshBasicMaterial({
+        color: 0xff4fd8,
+        transparent: true,
+        opacity: 0.85,
+      }),
     );
-    controls.position.set(0, -0.54, 0.52);
-    cabinet.add(cabinetBody, cabinetScreen, controls);
-    cabinet.position.set(0, -0.45, 0);
-    cabinet.rotation.y = -0.12;
-    world.add(cabinet);
+    rim.rotation.x = Math.PI / 2;
+    rim.position.y = 0.04;
+    world.add(rim);
 
-    const towerGeometry = new THREE.BoxGeometry(0.58, 1, 0.58);
-    const towers = projects.map((project, index) => {
-      const tower = new THREE.Mesh(towerGeometry, makeMaterial(project.color, project.color, 0.42));
-      const angle = (index / projects.length) * Math.PI * 2;
-      const radius = 3.35;
-      tower.position.set(Math.cos(angle) * radius, -1.12, Math.sin(angle) * radius);
-      tower.scale.y = 0.9 + index * 0.36;
-      tower.userData.baseScale = tower.scale.y;
-      skyline.add(tower);
-
-      const crown = new THREE.Mesh(
-        new THREE.SphereGeometry(0.18, 16, 16),
-        new THREE.MeshBasicMaterial({ color: project.secondary }),
-      );
-      crown.position.set(tower.position.x, -0.52 + tower.scale.y / 2, tower.position.z);
-      skyline.add(crown);
-      tower.userData.crown = crown;
-      return tower;
+    const portalGroups = portals.map((portal) => {
+      const portalGroup = makePortal(portal);
+      world.add(portalGroup);
+      return portalGroup;
     });
 
-    const padGeometry = new THREE.TorusGeometry(1.25, 0.018, 10, 100);
-    const rings = [0, 1, 2].map((index) => {
-      const ring = new THREE.Mesh(
-        padGeometry,
-        new THREE.MeshBasicMaterial({
-          color: index === 0 ? 0x00e5ff : index === 1 ? 0xff4fd8 : 0xfff36d,
-          transparent: true,
-          opacity: 0.5,
-        }),
-      );
-      ring.rotation.x = Math.PI / 2 + index * 0.18;
-      ring.scale.setScalar(1 + index * 0.7);
-      orbit.add(ring);
-      return ring;
-    });
+    const clickable = [floor, ...portalGroups.flatMap((portal) => portal.children)];
+
+    const player = new THREE.Group();
+    const body = new THREE.Mesh(
+      new THREE.SphereGeometry(0.34, 32, 32),
+      new THREE.MeshStandardMaterial({
+        color: 0xffffff,
+        emissive: 0x00e5ff,
+        emissiveIntensity: 0.72,
+        roughness: 0.16,
+        metalness: 0.2,
+      }),
+    );
+    const nose = new THREE.Mesh(
+      new THREE.ConeGeometry(0.22, 0.55, 4),
+      new THREE.MeshStandardMaterial({
+        color: 0xfff36d,
+        emissive: 0xff4fd8,
+        emissiveIntensity: 0.45,
+      }),
+    );
+    nose.rotation.x = Math.PI / 2;
+    nose.position.z = -0.42;
+
+    const aura = new THREE.Mesh(
+      new THREE.TorusGeometry(0.55, 0.025, 8, 80),
+      new THREE.MeshBasicMaterial({
+        color: 0x00ffa8,
+        transparent: true,
+        opacity: 0.85,
+      }),
+    );
+    aura.rotation.x = Math.PI / 2;
+    aura.position.y = -0.18;
+
+    player.add(body, nose, aura);
+    player.position.set(-0.2, 0.52, 0.15);
+    scene.add(player);
 
     const particlesGeometry = new THREE.BufferGeometry();
-    const particleCount = 900;
+    const particleCount = 720;
     const positions = new Float32Array(particleCount * 3);
     const colors = new Float32Array(particleCount * 3);
-    const colorSet = ["#00e5ff", "#ff4fd8", "#fff36d", "#00ffa8", "#8f7cff"].map(
-      (color) => new THREE.Color(color),
+    const palette = ["#00e5ff", "#ff4fd8", "#fff36d", "#00ffa8", "#8f7cff"].map(
+      (item) => new THREE.Color(item),
     );
 
     for (let index = 0; index < particleCount; index += 1) {
-      positions[index * 3] = (Math.random() - 0.5) * 34;
-      positions[index * 3 + 1] = (Math.random() - 0.5) * 19;
-      positions[index * 3 + 2] = (Math.random() - 0.5) * 28;
-      const color = colorSet[index % colorSet.length];
+      const angle = Math.random() * Math.PI * 2;
+      const radius = 7 + Math.random() * 10;
+      positions[index * 3] = Math.cos(angle) * radius;
+      positions[index * 3 + 1] = Math.random() * 8 - 1;
+      positions[index * 3 + 2] = Math.sin(angle) * radius;
+      const color = palette[index % palette.length];
       colors[index * 3] = color.r;
       colors[index * 3 + 1] = color.g;
       colors[index * 3 + 2] = color.b;
@@ -162,32 +254,62 @@ export default function Scene({ activeProject, powerOn, projects }) {
 
     particlesGeometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
     particlesGeometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
-
     const particles = new THREE.Points(
       particlesGeometry,
       new THREE.PointsMaterial({
-        size: 0.045,
+        size: 0.055,
         vertexColors: true,
         transparent: true,
-        opacity: 0.78,
+        opacity: 0.82,
         depthWrite: false,
       }),
     );
     scene.add(particles);
 
-    scene.add(new THREE.AmbientLight(0xffffff, 1.35));
-
-    const keyLight = new THREE.PointLight(0xfff36d, 70, 50);
-    keyLight.position.set(4, 5, 8);
+    scene.add(new THREE.AmbientLight(0xffffff, 1.15));
+    const keyLight = new THREE.PointLight(0xfff36d, 58, 44);
+    keyLight.position.set(2, 7, 4);
     scene.add(keyLight);
-
-    const fillLight = new THREE.PointLight(0x00e5ff, 52, 44);
-    fillLight.position.set(-5, 1, 7);
+    const fillLight = new THREE.PointLight(0x00e5ff, 42, 38);
+    fillLight.position.set(-4, 3, 6);
     scene.add(fillLight);
 
-    function handlePointerMove(event) {
-      pointer.x = event.clientX / window.innerWidth - 0.5;
-      pointer.y = event.clientY / window.innerHeight - 0.5;
+    function setTargetFromPortal(portalId) {
+      const portal = portals.find((item) => item.id === portalId);
+      if (portal) {
+        playerTarget.set(portal.x, 0, portal.z);
+      }
+    }
+
+    function handlePointerDown(event) {
+      const rect = renderer.domElement.getBoundingClientRect();
+      mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -(((event.clientY - rect.top) / rect.height) * 2 - 1);
+      raycaster.setFromCamera(mouse, camera);
+      const hits = raycaster.intersectObjects(clickable, true);
+      const hit = hits[0];
+      const portalId = hit?.object?.userData?.portalId;
+      if (portalId) {
+        setTargetFromPortal(portalId);
+        latestRef.current.onActivate(portalId);
+        return;
+      }
+
+      if (hit?.object?.name === "floor") {
+        playerTarget.copy(hit.point);
+        playerTarget.y = 0;
+      }
+    }
+
+    function handleKeyDown(event) {
+      if (["w", "a", "s", "d", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(event.key)) {
+        event.preventDefault();
+      }
+      keys.add(event.key.toLowerCase());
+    }
+
+    function handleKeyUp(event) {
+      keys.delete(event.key.toLowerCase());
     }
 
     function handleResize() {
@@ -196,56 +318,110 @@ export default function Scene({ activeProject, powerOn, projects }) {
       renderer.setSize(window.innerWidth, window.innerHeight);
     }
 
-    window.addEventListener("pointermove", handlePointerMove);
+    renderer.domElement.addEventListener("pointerdown", handlePointerDown);
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
     window.addEventListener("resize", handleResize);
 
     const clock = new THREE.Clock();
     let frameId = 0;
+    let lastTravelStamp = null;
+    let lastPortalId = null;
 
     function animate() {
       frameId = window.requestAnimationFrame(animate);
-      const elapsed = clock.getElapsedTime();
-      const { activeProject: currentProject, powerOn: currentPower } = latestRef.current;
-      const activeColor = new THREE.Color(currentProject.color);
-      const secondaryColor = new THREE.Color(currentProject.secondary);
-      const auraColor = new THREE.Color(currentProject.aura);
-      const speed = currentPower ? 1.45 : 0.72;
+      const delta = Math.min(clock.getDelta(), 0.04);
+      const elapsed = clock.elapsedTime;
+      const { boost: currentBoost, travelTarget, virtualMove } = latestRef.current;
 
-      world.rotation.y += 0.003 * speed;
-      orbit.rotation.y -= 0.012 * speed;
-      particles.rotation.y += 0.0009 * speed;
-      cabinet.rotation.y = Math.sin(elapsed * 0.8) * 0.18;
-      cabinet.position.y = -0.42 + Math.sin(elapsed * 1.7) * 0.08;
+      if (travelTarget && travelTarget.stamp !== lastTravelStamp) {
+        lastTravelStamp = travelTarget.stamp;
+        playerTarget.set(travelTarget.x, 0, travelTarget.z);
+      }
 
-      cabinetBody.material.color.lerp(activeColor, 0.045);
-      cabinetBody.material.emissive.lerp(activeColor, 0.045);
-      cabinetScreen.material.emissive.lerp(secondaryColor, 0.05);
-      controls.material.color.lerp(auraColor, 0.05);
-      platformEdge.material.color.lerp(activeColor, 0.045);
-      keyLight.color.lerp(auraColor, 0.04);
-      fillLight.color.lerp(secondaryColor, 0.04);
+      const input = new THREE.Vector3();
+      if (keys.has("w") || keys.has("arrowup") || virtualMove === "up") input.z -= 1;
+      if (keys.has("s") || keys.has("arrowdown") || virtualMove === "down") input.z += 1;
+      if (keys.has("a") || keys.has("arrowleft") || virtualMove === "left") input.x -= 1;
+      if (keys.has("d") || keys.has("arrowright") || virtualMove === "right") input.x += 1;
 
-      towers.forEach((tower, index) => {
-        const project = projects[index];
-        const isActive = project.id === currentProject.id;
-        const targetColor = new THREE.Color(isActive ? currentProject.color : project.color);
-        tower.material.color.lerp(targetColor, 0.04);
-        tower.material.emissive.lerp(targetColor, 0.04);
-        const lift = isActive ? 1.6 : 1;
-        tower.scale.y += (tower.userData.baseScale * lift - tower.scale.y) * 0.07;
-        tower.rotation.y += 0.012 * speed;
-        tower.userData.crown.position.y =
-          -0.52 + tower.scale.y / 2 + Math.sin(elapsed * 2 + index) * 0.08;
+      const speed = currentBoost || keys.has("shift") ? 5.4 : 3.2;
+      if (input.lengthSq() > 0) {
+        input.normalize();
+        player.position.x += input.x * speed * delta;
+        player.position.z += input.z * speed * delta;
+        playerTarget.set(player.position.x, 0, player.position.z);
+      } else {
+        const toTarget = new THREE.Vector3(
+          playerTarget.x - player.position.x,
+          0,
+          playerTarget.z - player.position.z,
+        );
+        const distance = toTarget.length();
+        if (distance > 0.04) {
+          toTarget.normalize();
+          player.position.x += toTarget.x * Math.min(speed * delta, distance);
+          player.position.z += toTarget.z * Math.min(speed * delta, distance);
+        }
+      }
+
+      const radius = Math.hypot(player.position.x, player.position.z);
+      if (radius > 7.35) {
+        player.position.x = (player.position.x / radius) * 7.35;
+        player.position.z = (player.position.z / radius) * 7.35;
+        playerTarget.set(player.position.x, 0, player.position.z);
+      }
+
+      if (input.lengthSq() > 0) {
+        player.rotation.y = Math.atan2(input.x, input.z);
+      } else {
+        const movement = new THREE.Vector3(
+          playerTarget.x - player.position.x,
+          0,
+          playerTarget.z - player.position.z,
+        );
+        if (movement.lengthSq() > 0.002) {
+          player.rotation.y = Math.atan2(movement.x, movement.z);
+        }
+      }
+
+      aura.rotation.z += delta * (currentBoost ? 8 : 4.4);
+      player.position.y = 0.52 + Math.sin(elapsed * 5.2) * 0.045;
+      particles.rotation.y += delta * 0.07;
+      rim.rotation.z += delta * 0.2;
+
+      let nearestPortal = null;
+      let nearestDistance = Infinity;
+      portals.forEach((portal) => {
+        const distance = Math.hypot(player.position.x - portal.x, player.position.z - portal.z);
+        if (distance < nearestDistance) {
+          nearestDistance = distance;
+          nearestPortal = portal;
+        }
       });
 
-      rings.forEach((ring, index) => {
-        ring.rotation.z += (0.008 + index * 0.004) * speed;
-        ring.material.opacity = currentPower ? 0.68 - index * 0.1 : 0.3 - index * 0.05;
+      if (nearestPortal && nearestDistance < 1.55 && nearestPortal.id !== lastPortalId) {
+        lastPortalId = nearestPortal.id;
+        latestRef.current.onActivate(nearestPortal.id);
+      }
+
+      portalGroups.forEach((portalGroup) => {
+        const isActive = portalGroup.userData.portalId === latestRef.current.activePortalId;
+        const targetScale = isActive ? 1.2 : 1;
+        portalGroup.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.08);
+        portalGroup.userData.ring.rotation.z += delta * (isActive ? 2.2 : 1.05);
+        portalGroup.userData.beam.material.opacity =
+          (isActive ? 0.34 : 0.14) + Math.sin(elapsed * 3) * 0.035;
+        portalGroup.children.forEach((child) => {
+          if (child.isSprite) {
+            child.quaternion.copy(camera.quaternion);
+          }
+        });
       });
 
-      camera.position.x += (pointer.x * 1.6 - camera.position.x) * 0.035;
-      camera.position.y += (3.1 + pointer.y * -0.9 - camera.position.y) * 0.035;
-      camera.lookAt(0, -0.65, 0);
+      camera.position.x += (player.position.x * 0.46 - camera.position.x) * 0.045;
+      camera.position.z += (player.position.z * 0.46 + 8.2 - camera.position.z) * 0.045;
+      camera.lookAt(player.position.x, 0, player.position.z);
 
       renderer.render(scene, camera);
     }
@@ -254,15 +430,18 @@ export default function Scene({ activeProject, powerOn, projects }) {
 
     return () => {
       window.cancelAnimationFrame(frameId);
-      window.removeEventListener("pointermove", handlePointerMove);
+      renderer.domElement.removeEventListener("pointerdown", handlePointerDown);
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
       window.removeEventListener("resize", handleResize);
       mount.removeChild(renderer.domElement);
       disposeObject(world);
+      disposeObject(player);
       particlesGeometry.dispose();
       particles.material.dispose();
       renderer.dispose();
     };
-  }, [projects]);
+  }, [portals]);
 
-  return <div className="scene" ref={mountRef} aria-hidden="true" />;
+  return <div className="scene" ref={mountRef} aria-label="Playable portfolio map" />;
 }

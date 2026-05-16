@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import Scene from "./Scene.jsx";
 import {
   capabilities,
@@ -10,253 +10,260 @@ import {
   timeline,
 } from "./data.js";
 
-const modes = ["Projects", "Skills", "Resume"];
-const skillGroups = ["All", "Frontend", "Backend", "Data", "Systems", "Desktop", "IT"];
+const projectPositions = [
+  [-5.4, -2.2],
+  [-3.2, 2.55],
+  [0.6, -3.2],
+  [3.35, 2.15],
+  [5.45, -1.7],
+];
+
+const specialPortals = [
+  {
+    id: "skills",
+    title: "Skill Vault",
+    type: "Loadout",
+    color: "#00ffa8",
+    secondary: "#00e5ff",
+    aura: "#fff36d",
+    x: 0,
+    z: 3.85,
+  },
+  {
+    id: "resume",
+    title: "Resume Gate",
+    type: "Story",
+    color: "#ff9f1c",
+    secondary: "#ff4fd8",
+    aura: "#00e5ff",
+    x: -6.2,
+    z: 1.1,
+  },
+  {
+    id: "contact",
+    title: "Contact Portal",
+    type: "Exit",
+    color: "#ff4fd8",
+    secondary: "#fff36d",
+    aura: "#00ffa8",
+    x: 6.2,
+    z: 1.25,
+  },
+];
+
+function buildPortals() {
+  const projectPortals = projects.map((project, index) => ({
+    ...project,
+    kind: "project",
+    x: projectPositions[index][0],
+    z: projectPositions[index][1],
+  }));
+
+  return [
+    ...projectPortals,
+    ...specialPortals.map((portal) => ({ ...portal, kind: portal.id })),
+  ];
+}
+
+function getPortalCopy(portal) {
+  if (portal.kind === "project") {
+    return portal.playSummary ?? portal.text;
+  }
+
+  if (portal.id === "skills") {
+    return "A compact loadout of the tools and systems Aayan works with.";
+  }
+
+  if (portal.id === "resume") {
+    return "Work, education, and strengths in a quick playable checkpoint.";
+  }
+
+  return "Open GitHub or send an email. No phone number exposed publicly.";
+}
 
 export default function App() {
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [mode, setMode] = useState(modes[0]);
-  const [skillGroup, setSkillGroup] = useState(skillGroups[0]);
-  const [powerOn, setPowerOn] = useState(true);
-  const [openExperience, setOpenExperience] = useState(0);
+  const portals = useMemo(buildPortals, []);
+  const [activePortalId, setActivePortalId] = useState(portals[0].id);
+  const [discovered, setDiscovered] = useState(() => new Set([portals[0].id]));
+  const [travelTarget, setTravelTarget] = useState(null);
+  const [virtualMove, setVirtualMove] = useState(null);
+  const [boost, setBoost] = useState(false);
 
-  const activeProject = projects[activeIndex];
-  const filteredCapabilities = useMemo(
-    () =>
-      skillGroup === "All"
-        ? capabilities
-        : capabilities.filter((capability) => capability.group === skillGroup),
-    [skillGroup],
-  );
+  const activePortal = portals.find((portal) => portal.id === activePortalId) ?? portals[0];
+  const discoveryCount = discovered.size;
+  const latestActivity = timeline.slice(0, 3);
 
-  useEffect(() => {
-    function handleKeyDown(event) {
-      if (event.key === "ArrowRight") {
-        setActiveIndex((value) => (value + 1) % projects.length);
+  function activatePortal(id) {
+    setActivePortalId(id);
+    setDiscovered((current) => {
+      if (current.has(id)) {
+        return current;
       }
-      if (event.key === "ArrowLeft") {
-        setActiveIndex((value) => (value - 1 + projects.length) % projects.length);
-      }
-      const number = Number(event.key);
-      if (number >= 1 && number <= projects.length) {
-        setActiveIndex(number - 1);
-      }
-    }
+      const next = new Set(current);
+      next.add(id);
+      return next;
+    });
+  }
 
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
+  function beamTo(portal) {
+    setTravelTarget({ id: portal.id, x: portal.x, z: portal.z, stamp: Date.now() });
+    activatePortal(portal.id);
+  }
 
   return (
     <main
-      className="site-shell"
+      className="game-shell"
       style={{
-        "--active": activeProject.color,
-        "--active-secondary": activeProject.secondary,
-        "--active-aura": activeProject.aura,
+        "--active": activePortal.color,
+        "--active-secondary": activePortal.secondary,
+        "--active-aura": activePortal.aura,
       }}
     >
-      <Scene activeProject={activeProject} powerOn={powerOn} projects={projects} />
+      <Scene
+        activePortalId={activePortal.id}
+        boost={boost}
+        onActivate={activatePortal}
+        portals={portals}
+        travelTarget={travelTarget}
+        virtualMove={virtualMove}
+      />
 
-      <header className="topbar">
-        <a className="brand" href="#home" aria-label="Aayan Amir home">
-          <span className="brand-mark">AA</span>
-          <span>
-            <strong>{profile.name}</strong>
-            <small>{profile.role}</small>
-          </span>
+      <header className="game-topbar">
+        <a className="brand" href={profile.github}>
+          <span>AA</span>
+          <strong>{profile.name}</strong>
         </a>
-
-        <nav aria-label="Portfolio sections">
-          {modes.map((item) => (
-            <button
-              className={mode === item ? "nav-pill active" : "nav-pill"}
-              key={item}
-              onClick={() => setMode(item)}
-              type="button"
-            >
-              {item}
-            </button>
-          ))}
-        </nav>
+        <div className="score-pill">
+          <b>{discoveryCount}</b> / {portals.length} discovered
+        </div>
       </header>
 
-      <section className="hero" id="home">
-        <div className="hero-copy">
-          <span className="level-tag">{profile.location}</span>
-          <h1>{profile.name}</h1>
-          <p className="hero-line">{profile.headline}</p>
-          <div className="hero-actions" aria-label="Main actions">
-            <a className="mega-button" href={activeProject.repo}>
-              Launch {activeProject.title}
+      <section className="start-card" aria-label="Playable instructions">
+        <span>{profile.role}</span>
+        <h1>Move. Enter portals. Discover Aayan.</h1>
+        <p>WASD / arrows, click the floor, or use touch controls.</p>
+      </section>
+
+      <aside className="portal-card" aria-live="polite">
+        <div className="portal-card-top">
+          <span>{activePortal.type}</span>
+          <button onClick={() => beamTo(activePortal)} type="button">
+            Beam
+          </button>
+        </div>
+
+        <h2>{activePortal.title}</h2>
+        <p>{getPortalCopy(activePortal)}</p>
+
+        {activePortal.kind === "project" && (
+          <>
+            <div className="mini-tags">
+              {activePortal.metrics.map((item) => (
+                <span key={item}>{item}</span>
+              ))}
+            </div>
+            <a className="launch-link" href={activePortal.repo}>
+              Open Repo
             </a>
-            <button
-              className={powerOn ? "mega-button ghost active" : "mega-button ghost"}
-              onClick={() => setPowerOn((value) => !value)}
-              type="button"
-            >
-              Neon Engine
-            </button>
-          </div>
-        </div>
+          </>
+        )}
 
-        <div className="player-card" aria-label="Current player profile">
-          <span>Player Card</span>
-          <strong>{profile.role}</strong>
-          <p>{profile.summary}</p>
-          <div className="meter-row">
-            <span>BSCS</span>
-            <span>CGPA 3.62</span>
-            <span>CCNA Track</span>
-          </div>
-        </div>
-      </section>
-
-      <section className="level-select" aria-label="Project level select">
-        <div className="section-title">
-          <span>Project Worlds</span>
-          <h2>Pick a level. The whole scene changes.</h2>
-        </div>
-
-        <div className="level-grid">
-          {projects.map((project, index) => (
-            <button
-              className={activeIndex === index ? "level-card active" : "level-card"}
-              key={project.id}
-              onClick={() => setActiveIndex(index)}
-              style={{
-                "--card-color": project.color,
-                "--card-secondary": project.secondary,
-              }}
-              type="button"
-            >
-              <span>{project.number}</span>
-              <strong>{project.title}</strong>
-              <small>{project.type}</small>
-            </button>
-          ))}
-        </div>
-      </section>
-
-      <section className="project-stage" aria-label="Active project details">
-        <div className="project-marquee">
-          <span>{activeProject.type}</span>
-          <h2>{activeProject.title}</h2>
-        </div>
-
-        <div className="project-info">
-          <p>{activeProject.text}</p>
-          <div className="tag-wall" aria-label="Technology stack">
-            {activeProject.stack.map((item) => (
-              <span key={item}>{item}</span>
+        {activePortal.id === "skills" && (
+          <div className="loadout-grid">
+            {capabilities.slice(0, 8).map((capability) => (
+              <span key={capability.label}>{capability.label}</span>
             ))}
           </div>
-        </div>
+        )}
 
-        <div className="achievement-strip" aria-label="Project highlights">
-          {activeProject.stats.map((item) => (
-            <button key={item} type="button">
-              {item}
-            </button>
-          ))}
-        </div>
-      </section>
-
-      <section className={mode === "Skills" ? "mode-panel show" : "mode-panel"}>
-        <div className="section-title">
-          <span>Skill Mixer</span>
-          <h2>Switch the loadout.</h2>
-        </div>
-
-        <div className="filter-row" aria-label="Skill filters">
-          {skillGroups.map((group) => (
-            <button
-              className={skillGroup === group ? "filter-button active" : "filter-button"}
-              key={group}
-              onClick={() => setSkillGroup(group)}
-              type="button"
-            >
-              {group}
-            </button>
-          ))}
-        </div>
-
-        <div className="skill-grid">
-          {filteredCapabilities.map((capability) => (
-            <article className="skill-tile" key={capability.label}>
-              <span>{capability.group}</span>
-              <strong>{capability.label}</strong>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className={mode === "Resume" ? "mode-panel show" : "mode-panel"}>
-        <div className="section-title">
-          <span>Resume Run</span>
-          <h2>Experience, education, and strengths.</h2>
-        </div>
-
-        <div className="resume-run">
-          <div className="experience-stack">
-            {experience.map((item, index) => (
-              <button
-                className={openExperience === index ? "experience-card active" : "experience-card"}
-                key={`${item.company}-${item.role}`}
-                onClick={() => setOpenExperience(index)}
-                type="button"
-              >
-                <span>{item.dates}</span>
-                <strong>{item.role}</strong>
-                <small>{item.company} / {item.location}</small>
-                {openExperience === index && (
-                  <ul>
-                    {item.points.map((point) => (
-                      <li key={point}>{point}</li>
-                    ))}
-                  </ul>
-                )}
-              </button>
-            ))}
-          </div>
-
-          <div className="education-panel">
-            <span>Education</span>
-            <h3>{education.degree}</h3>
-            <p>{education.school}</p>
-            <p>{education.detail}</p>
-            <div className="strength-track">
-              {strengths.map((strength) => (
-                <button key={strength} type="button">
-                  {strength}
-                </button>
+        {activePortal.id === "resume" && (
+          <div className="resume-snapshot">
+            <strong>{experience[0].company}</strong>
+            <span>{experience[0].role}</span>
+            <strong>{education.school}</strong>
+            <span>{education.detail}</span>
+            <div>
+              {strengths.slice(0, 4).map((strength) => (
+                <b key={strength}>{strength}</b>
               ))}
             </div>
           </div>
-        </div>
+        )}
+
+        {activePortal.id === "contact" && (
+          <div className="contact-actions">
+            <a href={profile.github}>GitHub</a>
+            <a href={`mailto:${profile.email}`}>Email</a>
+          </div>
+        )}
+      </aside>
+
+      <nav className="portal-dock" aria-label="Portal map">
+        {portals.map((portal) => (
+          <button
+            className={portal.id === activePortal.id ? "active" : ""}
+            key={portal.id}
+            onClick={() => beamTo(portal)}
+            style={{ "--portal-color": portal.color }}
+            type="button"
+          >
+            <span>{discovered.has(portal.id) ? "ON" : "NEW"}</span>
+            {portal.title}
+          </button>
+        ))}
+      </nav>
+
+      <section className="activity-card" aria-label="Recent activity">
+        <span>Recent Builds</span>
+        {latestActivity.map((item) => (
+          <p key={`${item.repo}-${item.title}`}>
+            {item.repo}: {item.title}
+          </p>
+        ))}
       </section>
 
-      <section className="activity-rail" aria-label="Recent GitHub activity">
-        <div className="section-title">
-          <span>GitHub Activity</span>
-          <h2>Recent work signal.</h2>
-        </div>
-
-        <div className="activity-track">
-          {timeline.map((item, index) => (
-            <article key={`${item.repo}-${item.title}`}>
-              <span>{String(index + 1).padStart(2, "0")}</span>
-              <h3>{item.title}</h3>
-              <p>{item.label} / {item.repo}</p>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <footer className="footer">
-        <a href={profile.github}>github.com/{profile.handle}</a>
-        <a href={`mailto:${profile.email}`}>{profile.email}</a>
-      </footer>
+      <div className="touch-pad" aria-label="Movement controls">
+        <button
+          onPointerDown={() => setVirtualMove("up")}
+          onPointerLeave={() => setVirtualMove(null)}
+          onPointerUp={() => setVirtualMove(null)}
+          type="button"
+        >
+          Up
+        </button>
+        <button
+          onPointerDown={() => setVirtualMove("left")}
+          onPointerLeave={() => setVirtualMove(null)}
+          onPointerUp={() => setVirtualMove(null)}
+          type="button"
+        >
+          Left
+        </button>
+        <button
+          onPointerDown={() => setBoost(true)}
+          onPointerLeave={() => setBoost(false)}
+          onPointerUp={() => setBoost(false)}
+          type="button"
+        >
+          Dash
+        </button>
+        <button
+          onPointerDown={() => setVirtualMove("right")}
+          onPointerLeave={() => setVirtualMove(null)}
+          onPointerUp={() => setVirtualMove(null)}
+          type="button"
+        >
+          Right
+        </button>
+        <button
+          onPointerDown={() => setVirtualMove("down")}
+          onPointerLeave={() => setVirtualMove(null)}
+          onPointerUp={() => setVirtualMove(null)}
+          type="button"
+        >
+          Down
+        </button>
+      </div>
     </main>
   );
 }
