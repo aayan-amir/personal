@@ -1,0 +1,81 @@
+@inject PortfolioDataService DataService
+
+<div class="section-header">
+    <h2 class="mono-text section-title"><span class="accent-cyan">02.</span> Systems Proficiency</h2>
+    <div class="header-line"></div>
+</div>
+
+<div class="skills-grid">
+    @foreach (var category in DataService.GetSkills())
+    {
+        <div class="glass-card skill-category">
+            <h3 class="mono-text category-title">@category.CategoryName</h3>
+            <div class="skills-list">
+                @foreach (var skill in category.Skills)
+                {
+                    <div class="skill-item">
+                        <span class="skill-icon"></span>
+                        <span class="skill-name">@skill</span>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    .skills-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2rem;
+    }
+
+    .skill-category {
+        border-top: 3px solid var(--accent-purple);
+    }
+    
+    .skill-category:nth-child(even) {
+        border-top-color: var(--accent-cyan);
+    }
+
+    .category-title {
+        font-size: 1.1rem;
+        margin-bottom: 1.5rem;
+        color: var(--text-main);
+    }
+
+    .skills-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .skill-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .skill-icon {
+        width: 8px;
+        height: 8px;
+        background: var(--text-muted);
+        transform: rotate(45deg);
+        transition: var(--transition);
+    }
+
+    .skill-item:hover .skill-icon {
+        background: var(--accent-emerald);
+        box-shadow: 0 0 10px var(--accent-emerald);
+    }
+
+    .skill-name {
+        color: var(--text-muted);
+        transition: var(--transition);
+    }
+
+    .skill-item:hover .skill-name {
+        color: var(--text-main);
+        transform: translateX(5px);
+    }
+</style>

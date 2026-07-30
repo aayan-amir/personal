@@ -1,0 +1,186 @@
+<div class="cli-trigger" @onclick="ToggleDrawer">
+    <span class="mono-text">_></span>
+</div>
+
+<div class="cli-drawer @(IsOpen ? "open" : "")">
+    <div class="cli-header">
+        <span class="mono-text">Aayan_Amir.exe - Terminal</span>
+        <button class="close-btn" @onclick="ToggleDrawer">×</button>
+    </div>
+    
+    <div class="cli-body" @ref="cliBody">
+        <div class="cli-line">Welcome to .NET Systems Hub v1.0.0</div>
+        <div class="cli-line">Type 'help' to see available commands.</div>
+        
+        @foreach (var line in OutputLines)
+        {
+            <div class="cli-line @(line.StartsWith(">") ? "cli-input-echo" : "cli-output")">@line</div>
+        }
+    </div>
+    
+    <div class="cli-input-container">
+        <span class="prompt">></span>
+        <input type="text" class="cli-input" @bind="CurrentInput" @onkeyup="HandleInput" placeholder="Enter command..." />
+    </div>
+</div>
+
+@code {
+    private bool IsOpen { get; set; } = false;
+    private string CurrentInput { get; set; } = string.Empty;
+    private List<string> OutputLines { get; set; } = new();
+    private ElementReference cliBody;
+
+    private void ToggleDrawer() => IsOpen = !IsOpen;
+
+    private void HandleInput(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !string.IsNullOrWhiteSpace(CurrentInput))
+        {
+            var cmd = CurrentInput.Trim().ToLower();
+            OutputLines.Add($"> {cmd}");
+            
+            ProcessCommand(cmd);
+            
+            CurrentInput = string.Empty;
+            StateHasChanged();
+        }
+    }
+
+    private void ProcessCommand(string cmd)
+    {
+        switch (cmd)
+        {
+            case "help":
+                OutputLines.Add("Available commands:");
+                OutputLines.Add("  projects  - List highlighted projects");
+                OutputLines.Add("  contact   - Display contact information");
+                OutputLines.Add("  whoami    - System authorization check");
+                OutputLines.Add("  clear     - Clear the terminal");
+                break;
+            case "projects":
+                OutputLines.Add("Loading projects...");
+                OutputLines.Add("- KOGO Metal Live Inventory (ASP.NET Core)");
+                OutputLines.Add("- Student Portal (ASP.NET Core MVC)");
+                OutputLines.Add("- NoTerm Command Center (Avalonia UI)");
+                break;
+            case "contact":
+                OutputLines.Add("Email: aayanwork1@gmail.com");
+                OutputLines.Add("GitHub: github.com/aayan-amir");
+                break;
+            case "whoami":
+                OutputLines.Add("guest_visitor_01");
+                break;
+            case "clear":
+                OutputLines.Clear();
+                break;
+            default:
+                OutputLines.Add($"Command not found: {cmd}. Type 'help' for options.");
+                break;
+        }
+    }
+}
+
+<style>
+    .cli-trigger {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        width: 50px;
+        height: 50px;
+        background: var(--accent-purple);
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        box-shadow: 0 4px 20px rgba(124, 92, 255, 0.4);
+        z-index: 999;
+        transition: var(--transition);
+        color: white;
+        font-weight: bold;
+    }
+
+    .cli-trigger:hover {
+        transform: scale(1.1);
+        background: var(--accent-cyan);
+        box-shadow: 0 4px 25px rgba(0, 242, 254, 0.5);
+    }
+
+    .cli-drawer {
+        position: fixed;
+        bottom: 0;
+        right: 0;
+        width: 100%;
+        max-width: 500px;
+        height: 400px;
+        background: #0a0a0f;
+        border-top-left-radius: 12px;
+        border-top: 1px solid var(--accent-cyan);
+        border-left: 1px solid var(--accent-cyan);
+        box-shadow: -5px -5px 30px rgba(0, 0, 0, 0.8);
+        transform: translateY(110%);
+        transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+        z-index: 1000;
+        display: flex;
+        flex-direction: column;
+        font-family: var(--font-mono);
+    }
+
+    .cli-drawer.open {
+        transform: translateY(0);
+    }
+
+    .cli-header {
+        background: rgba(255,255,255,0.05);
+        padding: 0.75rem 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+        font-size: 0.85rem;
+        color: var(--text-muted);
+    }
+
+    .close-btn {
+        background: transparent;
+        border: none;
+        color: var(--text-muted);
+        font-size: 1.25rem;
+        cursor: pointer;
+    }
+
+    .close-btn:hover { color: white; }
+
+    .cli-body {
+        flex: 1;
+        padding: 1rem;
+        overflow-y: auto;
+        font-size: 0.85rem;
+        color: #a6accd;
+    }
+
+    .cli-line { margin-bottom: 0.25rem; }
+    .cli-input-echo { color: var(--accent-cyan); }
+    .cli-output { color: #f0f0f5; }
+
+    .cli-input-container {
+        display: flex;
+        padding: 1rem;
+        background: rgba(0,0,0,0.5);
+        border-top: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .prompt {
+        color: var(--accent-emerald);
+        margin-right: 0.5rem;
+    }
+
+    .cli-input {
+        flex: 1;
+        background: transparent;
+        border: none;
+        color: white;
+        font-family: var(--font-mono);
+        outline: none;
+    }
+</style>

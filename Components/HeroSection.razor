@@ -1,0 +1,123 @@
+@inject PortfolioDataService DataService
+
+<section class="hero-container">
+    <div class="container hero-content">
+        <div class="glass-card hero-glass">
+            <h2 class="mono-text system-ready">>> System.Diagnostics.Process.Start("Aayan_Amir.exe");</h2>
+            <h1 class="hero-title">
+                .NET Developer & <br />
+                <span class="accent-text">Systems Architect</span>
+            </h1>
+            <p class="hero-summary">
+                @DataService.GetProfile().Summary
+            </p>
+            
+            <div class="metric-bar">
+                <div class="metric">
+                    <span class="metric-value">@DataService.GetProfile().CGPA</span>
+                    <span class="metric-label">CGPA (Sir Syed Univ)</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-value accent-emerald">~100</span>
+                    <span class="metric-label">Live Inventory Items Handled</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-value accent-cyan">66+</span>
+                    <span class="metric-label">Secured Sysadmin Actions</span>
+                </div>
+            </div>
+
+            <div class="hero-actions">
+                <a href="#projects" class="btn-primary">Explore Architecture</a>
+                <a href="@DataService.GetProfile().GitHub" target="_blank" class="btn-outline">
+                    <span class="mono-text">git clone</span> GitHub
+                </a>
+                <a href="Aayan_Amir_CV.pdf" target="_blank" class="btn-outline" download>
+                    <span class="mono-text">wget</span> CV.pdf
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    .hero-container {
+        min-height: calc(100vh - 70px);
+        display: flex;
+        align-items: center;
+        position: relative;
+    }
+
+    .hero-glass {
+        padding: 4rem;
+        border-color: rgba(0, 242, 254, 0.3);
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    }
+
+    .system-ready {
+        color: var(--accent-emerald);
+        font-size: 0.9rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .hero-title {
+        font-size: 4rem;
+        line-height: 1.1;
+        margin-bottom: 1.5rem;
+    }
+
+    .accent-text {
+        background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .hero-summary {
+        font-size: 1.1rem;
+        color: var(--text-muted);
+        max-width: 800px;
+        margin-bottom: 3rem;
+    }
+
+    .metric-bar {
+        display: flex;
+        gap: 3rem;
+        margin-bottom: 3rem;
+        padding-top: 2rem;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .metric {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .metric-value {
+        font-size: 2.5rem;
+        font-weight: 800;
+        line-height: 1;
+        margin-bottom: 0.5rem;
+    }
+
+    .metric-label {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .accent-emerald { color: var(--accent-emerald); }
+    .accent-cyan { color: var(--accent-cyan); }
+
+    .hero-actions {
+        display: flex;
+        gap: 1.5rem;
+    }
+
+    @@media (max-width: 768px) {
+        .hero-glass { padding: 2rem; }
+        .hero-title { font-size: 2.5rem; }
+        .metric-bar { flex-direction: column; gap: 1.5rem; }
+        .hero-actions { flex-direction: column; }
+    }
+</style>

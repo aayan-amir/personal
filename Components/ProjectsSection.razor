@@ -1,0 +1,122 @@
+@inject PortfolioDataService DataService
+
+<div class="section-header">
+    <h2 class="mono-text section-title"><span class="accent-cyan">01.</span> Architecture & Projects</h2>
+    <div class="header-line"></div>
+</div>
+
+<div class="projects-grid">
+    @foreach (var project in DataService.GetProjects())
+    {
+        <div class="glass-card project-card">
+            <div class="project-header">
+                <span class="mono-text project-tech">@project.TechStackSummary</span>
+                <a href="@project.RepoUrl" target="_blank" class="github-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+                </a>
+            </div>
+            
+            <h3 class="project-title">@project.Title</h3>
+            
+            <p class="project-desc">@project.Description</p>
+            
+            <ul class="project-bullets">
+                @foreach(var bp in project.BulletPoints)
+                {
+                    <li><span class="bullet-arrow">-></span> @bp</li>
+                }
+            </ul>
+
+            <div class="project-tags">
+                @foreach (var tag in project.Tags)
+                {
+                    <span class="tech-badge">@tag</span>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    .section-header {
+        display: flex;
+        align-items: center;
+        gap: 2rem;
+        margin-bottom: 3rem;
+    }
+
+    .section-title {
+        font-size: 2rem;
+        margin: 0;
+    }
+
+    .header-line {
+        flex: 1;
+        height: 1px;
+        background: linear-gradient(90deg, var(--border-color), transparent);
+    }
+
+    .projects-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 2rem;
+    }
+
+    .project-card {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+
+    .project-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .project-tech {
+        font-size: 0.8rem;
+        color: var(--accent-purple);
+    }
+
+    .github-icon {
+        color: var(--text-muted);
+    }
+
+    .github-icon:hover {
+        color: var(--text-main);
+    }
+
+    .project-title {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .project-desc {
+        color: var(--text-muted);
+        margin-bottom: 1.5rem;
+    }
+
+    .project-bullets {
+        list-style: none;
+        margin-bottom: 2rem;
+        flex: 1;
+    }
+
+    .project-bullets li {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+        font-size: 0.95rem;
+    }
+
+    .bullet-arrow {
+        color: var(--accent-cyan);
+        font-family: var(--font-mono);
+    }
+
+    .project-tags {
+        margin-top: auto;
+    }
+</style>

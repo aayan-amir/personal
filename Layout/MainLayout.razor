@@ -1,0 +1,39 @@
+@inherits LayoutComponentBase
+
+<div class="page">
+    <header class="top-nav glass-nav">
+        <div class="container nav-content">
+            <a href="/" class="brand">
+                <span class="mono-text bracket">[</span>
+                <span class="name">Aayan Amir</span>
+                <span class="mono-text bracket">]</span>
+            </a>
+            <div class="nav-links">
+                <a href="#projects">Projects</a>
+                <a href="#skills">Skills</a>
+                <a href="#experience">Experience</a>
+                <a href="Aayan_Amir_CV.pdf" target="_blank">Resume</a>
+                <a href="https://github.com/aayan-amir" target="_blank" class="github-link">GitHub</a>
+            </div>
+            <div class="status-indicator">
+                <div class="pulse"></div>
+                <span>SYSTEM ONLINE</span>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        @Body
+    </main>
+
+    <footer class="bottom-footer">
+        <div class="container footer-content">
+            <p class="mono-text">© @DateTime.Now.Year Aayan Amir. Engineered with C# & .NET WebAssembly.</p>
+            <div class="footer-links">
+                <a href="mailto:aayanwork1@gmail.com">aayanwork1@gmail.com</a>
+                <span class="separator">|</span>
+                <span>Karachi, Pakistan</span>
+            </div>
+        </div>
+    </footer>
+</div>

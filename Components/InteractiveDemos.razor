@@ -1,0 +1,252 @@
+<div class="section-header">
+    <h2 class="mono-text section-title"><span class="accent-cyan">04.</span> Interactive Architecture</h2>
+    <div class="header-line"></div>
+</div>
+
+<div class="glass-card demo-container">
+    <div class="demo-tabs">
+        <button class="demo-tab @(ActiveTab == "QR" ? "active" : "")" @onclick='() => SetTab("QR")'>
+            QR Inventory Intake
+        </button>
+        <button class="demo-tab @(ActiveTab == "Sec" ? "active" : "")" @onclick='() => SetTab("Sec")'>
+            NoTerm Security Guard
+        </button>
+    </div>
+
+    <div class="demo-content">
+        @if (ActiveTab == "QR")
+        {
+            <div class="qr-demo">
+                <div class="code-panel">
+                    <div class="panel-header mono-text">ASP.NET Core Web API (Mock)</div>
+                    <pre class="mono-text">
+[HttpPost("scan")]
+public IActionResult ProcessScan([FromBody] ScanReq req)
+{
+    var item = db.Items.Find(req.Id);
+    if(item != null) {
+        item.Stock++;
+        db.SaveChanges();
+        return Ok(new { Count = item.Stock });
+    }
+    return NotFound();
+}
+                    </pre>
+                </div>
+                <div class="visualizer-panel">
+                    <div class="qr-simulator">
+                        <div class="stock-count">Stock: @StockCount</div>
+                        <button class="btn-primary" @onclick="SimulateScan">Simulate QR Scan</button>
+                        @if (IsScanning)
+                        {
+                            <div class="scan-effect">Scanning...</div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+        else if (ActiveTab == "Sec")
+        {
+            <div class="sec-demo">
+                <div class="code-panel">
+                    <div class="panel-header mono-text">Avalonia UI C# Security (Mock)</div>
+                    <pre class="mono-text">
+// VULNERABLE:
+// Process.Start("bash", "-c " + userInput);
+
+// SECURE (NoTerm):
+var psi = new ProcessStartInfo("bash");
+psi.ArgumentList.Add("-c");
+psi.ArgumentList.Add("systemctl status");
+// userInput is NOT concatenated to shell
+Process.Start(psi);
+                    </pre>
+                </div>
+                <div class="visualizer-panel">
+                    <div class="security-simulator">
+                        <input type="text" @bind="UserInput" placeholder="Enter args (e.g. status; rm -rf /)" class="sec-input" />
+                        <button class="btn-outline" @onclick="TestVulnerable">Test Vulnerable</button>
+                        <button class="btn-primary" @onclick="TestSecure">Test Secure (NoTerm)</button>
+                        
+                        <div class="sec-output @OutputClass">
+                            @OutputMsg
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private string ActiveTab { get; set; } = "QR";
+    
+    // QR State
+    private int StockCount { get; set; } = 100;
+    private bool IsScanning { get; set; } = false;
+
+    // Sec State
+    private string UserInput { get; set; } = "status; rm -rf /";
+    private string OutputMsg { get; set; } = "Ready.";
+    private string OutputClass { get; set; } = "";
+
+    private void SetTab(string tab) => ActiveTab = tab;
+
+    private async Task SimulateScan()
+    {
+        IsScanning = true;
+        StateHasChanged();
+        await Task.Delay(500); // Simulate network/DB
+        StockCount++;
+        IsScanning = false;
+        StateHasChanged();
+    }
+
+    private void TestVulnerable()
+    {
+        if (UserInput.Contains(";"))
+        {
+            OutputMsg = $"CRITICAL: Command Injection Detected! Executed: {UserInput}";
+            OutputClass = "sec-danger";
+        }
+        else
+        {
+            OutputMsg = "Executed safely.";
+            OutputClass = "sec-success";
+        }
+    }
+
+    private void TestSecure()
+    {
+        OutputMsg = $"SECURE: Argument parsed safely as literal string. Injection thwarted.";
+        OutputClass = "sec-success";
+    }
+}
+
+<style>
+    .demo-container {
+        padding: 0;
+        overflow: hidden;
+    }
+
+    .demo-tabs {
+        display: flex;
+        background: rgba(0,0,0,0.2);
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .demo-tab {
+        flex: 1;
+        padding: 1rem;
+        background: transparent;
+        border: none;
+        color: var(--text-muted);
+        font-family: var(--font-mono);
+        cursor: pointer;
+        transition: var(--transition);
+        border-bottom: 2px solid transparent;
+    }
+
+    .demo-tab:hover {
+        color: var(--text-main);
+        background: rgba(255,255,255,0.05);
+    }
+
+    .demo-tab.active {
+        color: var(--accent-cyan);
+        border-bottom-color: var(--accent-cyan);
+        background: rgba(0, 242, 254, 0.05);
+    }
+
+    .demo-content {
+        padding: 2rem;
+    }
+
+    .qr-demo, .sec-demo {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+    }
+
+    .code-panel {
+        background: #0d0d12;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+    }
+
+    .panel-header {
+        background: rgba(255,255,255,0.05);
+        padding: 0.5rem 1rem;
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .code-panel pre {
+        padding: 1rem;
+        font-size: 0.85rem;
+        color: #a6accd;
+        overflow-x: auto;
+    }
+
+    .visualizer-panel {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .qr-simulator {
+        text-align: center;
+    }
+
+    .stock-count {
+        font-size: 3rem;
+        font-weight: 800;
+        color: var(--accent-emerald);
+        margin-bottom: 1.5rem;
+    }
+
+    .scan-effect {
+        margin-top: 1rem;
+        color: var(--accent-cyan);
+        font-family: var(--font-mono);
+        animation: blink 0.5s infinite alternate;
+    }
+
+    @@keyframes blink { from { opacity: 1; } to { opacity: 0.3; } }
+
+    .security-simulator {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .sec-input {
+        width: 100%;
+        padding: 0.75rem;
+        background: rgba(0,0,0,0.5);
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        color: white;
+        font-family: var(--font-mono);
+    }
+
+    .sec-output {
+        margin-top: 1rem;
+        padding: 1rem;
+        border-radius: 4px;
+        font-family: var(--font-mono);
+        font-size: 0.9rem;
+        background: rgba(0,0,0,0.5);
+    }
+
+    .sec-danger { border-left: 4px solid #ff4757; color: #ff4757; }
+    .sec-success { border-left: 4px solid var(--accent-emerald); color: var(--accent-emerald); }
+
+    @@media (max-width: 768px) {
+        .qr-demo, .sec-demo { grid-template-columns: 1fr; }
+    }
+</style>
