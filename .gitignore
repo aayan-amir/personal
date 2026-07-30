@@ -1,7 +1,7 @@
 # .NET Core
 bin/
 obj/
-release/
+release*/
 
 # Node/React (Legacy)
 node_modules/
