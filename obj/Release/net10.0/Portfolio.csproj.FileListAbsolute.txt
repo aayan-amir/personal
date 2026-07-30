@@ -206,9 +206,6 @@ C:\Users\ZAHEER\Desktop\personal\bin\Release\net10.0\wwwroot\_framework\dotnet.r
 C:\Users\ZAHEER\Desktop\personal\bin\Release\net10.0\wwwroot\_framework\icudt_CJK.tjcz0u77k5.dat
 C:\Users\ZAHEER\Desktop\personal\bin\Release\net10.0\wwwroot\_framework\icudt_EFIGS.tptq2av103.dat
 C:\Users\ZAHEER\Desktop\personal\bin\Release\net10.0\wwwroot\_framework\icudt_no_CJK.lfu7j35m59.dat
-C:\Users\ZAHEER\Desktop\personal\bin\Release\net10.0\wwwroot\_framework\Portfolio.j4ym9memey.wasm
-C:\Users\ZAHEER\Desktop\personal\bin\Release\net10.0\wwwroot\_framework\Portfolio.qgg6q66xhq.pdb
-C:\Users\ZAHEER\Desktop\personal\bin\Release\net10.0\wwwroot\_framework\dotnet.mp6li61wev.js
 C:\Users\ZAHEER\Desktop\personal\bin\Release\net10.0\wwwroot\_framework\blazor.webassembly.958z1vx7fr.js.gz
 C:\Users\ZAHEER\Desktop\personal\bin\Release\net10.0\wwwroot\_framework\Microsoft.AspNetCore.Authorization.wp5b4xwrtz.wasm.gz
 C:\Users\ZAHEER\Desktop\personal\bin\Release\net10.0\wwwroot\_framework\Microsoft.AspNetCore.Components.4payhwuyuh.wasm.gz
@@ -416,9 +413,6 @@ C:\Users\ZAHEER\Desktop\personal\bin\Release\net10.0\wwwroot\_framework\dotnet.r
 C:\Users\ZAHEER\Desktop\personal\bin\Release\net10.0\wwwroot\_framework\icudt_CJK.tjcz0u77k5.dat.gz
 C:\Users\ZAHEER\Desktop\personal\bin\Release\net10.0\wwwroot\_framework\icudt_EFIGS.tptq2av103.dat.gz
 C:\Users\ZAHEER\Desktop\personal\bin\Release\net10.0\wwwroot\_framework\icudt_no_CJK.lfu7j35m59.dat.gz
-C:\Users\ZAHEER\Desktop\personal\bin\Release\net10.0\wwwroot\_framework\Portfolio.j4ym9memey.wasm.gz
-C:\Users\ZAHEER\Desktop\personal\bin\Release\net10.0\wwwroot\_framework\Portfolio.qgg6q66xhq.pdb.gz
-C:\Users\ZAHEER\Desktop\personal\bin\Release\net10.0\wwwroot\_framework\dotnet.mp6li61wev.js.gz
 C:\Users\ZAHEER\Desktop\personal\bin\Release\net10.0\Portfolio.staticwebassets.runtime.json
 C:\Users\ZAHEER\Desktop\personal\bin\Release\net10.0\Portfolio.staticwebassets.endpoints.json
 C:\Users\ZAHEER\Desktop\personal\bin\Release\net10.0\Portfolio.dll
@@ -1059,10 +1053,6 @@ C:\Users\ZAHEER\Desktop\personal\obj\Release\net10.0\compressed\xf3aluda4s-{0}-l
 C:\Users\ZAHEER\Desktop\personal\obj\Release\net10.0\compressed\yc4xzztoz7-{0}-tjcz0u77k5-tjcz0u77k5.gz
 C:\Users\ZAHEER\Desktop\personal\obj\Release\net10.0\compressed\3du125dk5m-{0}-tptq2av103-tptq2av103.gz
 C:\Users\ZAHEER\Desktop\personal\obj\Release\net10.0\compressed\x87jtt9nby-{0}-lfu7j35m59-lfu7j35m59.gz
-C:\Users\ZAHEER\Desktop\personal\obj\Release\net10.0\compressed\phqntkgxay-{0}-j4ym9memey-j4ym9memey.gz
-C:\Users\ZAHEER\Desktop\personal\obj\Release\net10.0\compressed\dd4nc87vck-{0}-qgg6q66xhq-qgg6q66xhq.gz
-C:\Users\ZAHEER\Desktop\personal\obj\Release\net10.0\compressed\hgqrykxyam-{0}-mp6li61wev-mp6li61wev.gz
-C:\Users\ZAHEER\Desktop\personal\obj\Release\net10.0\compressed\2j9ne7xxzb-{0}-iug5ljm53n-iug5ljm53n.gz
 C:\Users\ZAHEER\Desktop\personal\obj\Release\net10.0\staticwebassets.build.json
 C:\Users\ZAHEER\Desktop\personal\obj\Release\net10.0\staticwebassets.build.json.cache
 C:\Users\ZAHEER\Desktop\personal\obj\Release\net10.0\staticwebassets.development.json
@@ -1073,3 +1063,13 @@ C:\Users\ZAHEER\Desktop\personal\obj\Release\net10.0\Portfolio.dll
 C:\Users\ZAHEER\Desktop\personal\obj\Release\net10.0\refint\Portfolio.dll
 C:\Users\ZAHEER\Desktop\personal\obj\Release\net10.0\Portfolio.pdb
 C:\Users\ZAHEER\Desktop\personal\obj\Release\net10.0\ref\Portfolio.dll
+C:\Users\ZAHEER\Desktop\personal\bin\Release\net10.0\wwwroot\_framework\Portfolio.aszb143oqb.wasm
+C:\Users\ZAHEER\Desktop\personal\bin\Release\net10.0\wwwroot\_framework\Portfolio.oq0zuyptfy.pdb
+C:\Users\ZAHEER\Desktop\personal\bin\Release\net10.0\wwwroot\_framework\dotnet.lp5cnpvu2r.js
+C:\Users\ZAHEER\Desktop\personal\bin\Release\net10.0\wwwroot\_framework\Portfolio.aszb143oqb.wasm.gz
+C:\Users\ZAHEER\Desktop\personal\bin\Release\net10.0\wwwroot\_framework\Portfolio.oq0zuyptfy.pdb.gz
+C:\Users\ZAHEER\Desktop\personal\bin\Release\net10.0\wwwroot\_framework\dotnet.lp5cnpvu2r.js.gz
+C:\Users\ZAHEER\Desktop\personal\obj\Release\net10.0\compressed\phqntkgxay-{0}-aszb143oqb-aszb143oqb.gz
+C:\Users\ZAHEER\Desktop\personal\obj\Release\net10.0\compressed\dd4nc87vck-{0}-oq0zuyptfy-oq0zuyptfy.gz
+C:\Users\ZAHEER\Desktop\personal\obj\Release\net10.0\compressed\hgqrykxyam-{0}-lp5cnpvu2r-lp5cnpvu2r.gz
+C:\Users\ZAHEER\Desktop\personal\obj\Release\net10.0\compressed\2j9ne7xxzb-{0}-yetiddkot5-yetiddkot5.gz
