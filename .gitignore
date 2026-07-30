@@ -1,6 +1,29 @@
-node_modules
-dist
-.npm-cache
-vite-server*.log
-.env
+# .NET Core
+bin/
+obj/
+release/
+
+# Node/React (Legacy)
+node_modules/
+dist/
+
+# Visual Studio
+.vs/
+*.user
+*.userosscache
+*.sln.docstates
+*.suo
+
+# Visual Studio Code
+.vscode/
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# macOS
 .DS_Store
+.AppleDouble
+.LSOverride
